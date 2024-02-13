@@ -1,8 +1,8 @@
 from __future__ import print_function
 import time
 
-from losses_FINAL import *
-from helper_methods_FINAL import *
+from losses import *
+from helper_methods import *
 from models.resnet import *
 from models.wideresnet import *
 

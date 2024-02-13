@@ -227,9 +227,9 @@ def load_data(ds_name, args, kwargs, coarse=False):
     elif ds_name == 'cifar100':
         # Load in the CIFAR100 dataloaders
         if coarse==True:
-            trainset = CIFAR100(root='../data2', train=True, download=True, transform=transform_train, coarse=True)
+            trainset = CIFAR100(root='../data', train=True, download=True, transform=transform_train, coarse=True)
             train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, **kwargs)
-            testset = CIFAR100(root='../data2', train=False, download=True, transform=transform_test,  coarse=True)
+            testset = CIFAR100(root='../data', train=False, download=True, transform=transform_test,  coarse=True)
             test_loader = torch.utils.data.DataLoader(testset, batch_size=args.test_batch_size, shuffle=False, **kwargs)
         else:
             trainset = torchvision.datasets.CIFAR100(root='../data', train=True, download=True,
@@ -245,7 +245,7 @@ def load_data(ds_name, args, kwargs, coarse=False):
 
 def epochs_define_attacks(epoch, dataset):
     """
-        Defines a dictionary of attacks based on the current epoch
+        Defines a dictionary of attacks based on the current epoch.
 
         :param epoch: current epoch
         :param dataset: name of dataset

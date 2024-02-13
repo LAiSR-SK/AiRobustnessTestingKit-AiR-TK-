@@ -5,9 +5,9 @@ import time
 
 from models.resnet import *
 from models.wideresnet import *
-from losses_FINAL import *
-from helper_methods_FINAL import *
-from warmup_round_FINAL import *
+from losses import *
+from helper_methods import *
+from warmup_round import *
 
 """Trains a model using the Various Attacks method.
 
