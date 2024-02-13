@@ -2,7 +2,7 @@ from __future__ import print_function
 import time
 
 from losses import *
-from helper_methods import *
+from helper_functions import *
 from models.resnet import *
 from models.wideresnet import *
 
