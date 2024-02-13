@@ -7,7 +7,7 @@ from models.resnet import *
 from models.wideresnet import *
 from losses import *
 from helper_functions import *
-from warmup_round import *
+from warmup_round import main_warmup
 
 """Trains a model using the Various Attacks method.
 
