@@ -15,39 +15,6 @@ Models: ResNet-18, ResNet-34, ResNet-50, ResNet-101, ResNet-152, WideResNet-34
 
 Datasets: CIFAR-10, CIFAR-100"""
 
-parser = argparse.ArgumentParser(description='PyTorch VA Adversarial Training')
-parser.add_argument('--dataset', default='cifar10',
-                    help='dataset to train on (cifar10 or cifar100)')
-parser.add_argument('--model-arch', default='wideres34',
-                    help='model architecture to train')
-parser.add_argument('--batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for training (default: 128)')
-parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for testing (default: 128)')
-parser.add_argument('--epochs', type=int, default=140, metavar='N',
-                    help='number of epochs to train')
-parser.add_argument('--warmup', type=int, default=0, metavar='N',
-                    help='number of epochs to train with clean data before AT')
-parser.add_argument('--weight-decay', '--wd', default=2e-4,
-                    type=float, metavar='W')
-parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
-                    help='learning rate')
-parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
-                    help='SGD momentum')
-parser.add_argument('--no-cuda', action='store_true', default=False,
-                    help='disables CUDA training')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=100, metavar='N',
-                    help='how many batches to wait before logging training status')
-parser.add_argument('--model-dir', default='./saved-models',
-                    help='directory of model for saving checkpoint')
-parser.add_argument('--save-freq', '-s', default=1, type=int, metavar='N',
-                    help='save frequency')
-parser.add_argument('--lr-schedule', default='decay',
-                    help='schedule for adjusting learning rate')
-args = parser.parse_args()
-
 # Define settings
 model_dir = args.model_dir
 if not os.path.exists(model_dir):
@@ -110,7 +77,7 @@ def train(args, model, device, train_loader, optimizer, epoch, attacks, ds_name)
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                        100. * batch_idx / len(train_loader), loss.item()))
 
-def main_va_epochs():
+def main():
     """
         Main training method, which establishes the model/dataset before conducting training and
         clean testing for each epoch. Then reports final training time and conducts robustness tests
@@ -127,7 +94,7 @@ def main_va_epochs():
     clean_epochs = args.warmup
 
     # Create file to print training progress
-    filename = 'tests/va-epochs-{}-{}-output.txt'.format(ds_name, mod_name)
+    filename = 'va-epochs-{}-{}-output.txt'.format(ds_name, mod_name)
     f = open(filename, "a")
 
     # Initialize the model based on the specified architecture
@@ -234,4 +201,4 @@ def main_va_epochs():
 
 
 if __name__ == '__main__':
-    main_va_epochs()
+    main()

@@ -35,11 +35,11 @@ Various Attacks
 ```
 To train a WideResNet-34-10 model using the Various Attacks method on the CIFAR-10 dataset:
 
-```python train_va.py --dataset 'cifar10' --model-arch 'wideres34' --warmup 15 --epochs 75```
+```python train_va.py --dataset cifar10 --model-arch wideres34 --warmup 15 --epochs 75```
 
 To use the Various Attacks method on the CIFAR-100 dataset:
 
-```python train_va.py --dataset 'cifar100' --model-arch 'wideres34' --warmup 25 --epochs 140```
+```python train_va.py --dataset cifar100 --model-arch wideres34 --warmup 25 --epochs 140```
 
 ## Reference Code
 1. ADT: https://github.com/dongyp13/Adversarial-Distributional-Training

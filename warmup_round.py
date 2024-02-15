@@ -5,6 +5,7 @@ from losses import *
 from helper_functions import *
 from models.resnet import *
 from models.wideresnet import *
+from helper_functions import args
 
 """Trains a model on clean data only.
 
@@ -12,7 +13,7 @@ Models: ResNet-18, ResNet-34, ResNet-50, ResNet-101, ResNet-152, WideResNet-34
 
 Datasets: CIFAR-10, CIFAR-100"""
 
-parser = argparse.ArgumentParser(description='PyTorch CIFAR Training Framework')
+"""parser = argparse.ArgumentParser(description='PyTorch CIFAR Training Framework')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
 parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
@@ -35,7 +36,7 @@ parser.add_argument('--save-freq', '-s', default=1, type=int, metavar='N',
                     help='save frequency')
 parser.add_argument('--lr-schedule', default='decay',
                     help='schedule for adjusting learning rate')
-args = parser.parse_args()
+args = parser.parse_args()"""
 
 # Define settings
 model_dir = args.model_dir
@@ -97,7 +98,7 @@ def main_warmup(ds_name, mod_name, epochs):
     """
 
     # Create file to print training progress
-    filename = 'tests/clean-{}-{}-output.txt'.format(ds_name, mod_name)
+    filename = 'clean-{}-{}-output.txt'.format(ds_name, mod_name)
     f = open(filename, "a")
 
     # Initialize the model based on the specified architecture
