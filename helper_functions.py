@@ -11,6 +11,8 @@ from torch.autograd import Variable
 import torch.optim as optim
 
 from cifar_data import *
+from models.resnet import *
+from models.wideresnet import *
 
 parser = argparse.ArgumentParser(description='PyTorch VA Adversarial Training')
 parser.add_argument('--dataset', type=str, default='cifar100', help='dataset')
@@ -837,3 +839,21 @@ def mim_whitebox(model,
         # Clamp X_gd to be between 0 and 1, as a Variable
         X_pgd = Variable(torch.clamp(X_pgd, 0, 1.0), requires_grad=True)
     return X_pgd
+
+def get_model(mod_name, ds_name, device):
+    if mod_name == 'res18':
+        model = ResNet18(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
+    elif mod_name == 'res34':
+        model = ResNet34(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
+    elif mod_name == 'res50':
+        model = ResNet50(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
+    elif mod_name == 'res101':
+        model = ResNet101(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
+    elif mod_name == 'res152':
+        model = ResNet152(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
+    elif mod_name == 'wideres34':
+        model = WideResNet(depth=34, num_classes=100 if ds_name == 'cifar100' else 10).to(device)
+    else:
+        raise NotImplementedError
+
+    return model

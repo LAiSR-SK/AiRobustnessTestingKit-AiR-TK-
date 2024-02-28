@@ -103,20 +103,7 @@ def main_warmup(ds_name, mod_name, epochs):
 
     # Initialize the model based on the specified architecture
     start_tot = time.time() # start recording training time
-    if mod_name == 'res18':
-        model = ResNet18(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res34':
-        model = ResNet34(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res50':
-        model = ResNet50(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res101':
-        model = ResNet101(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res152':
-        model = ResNet152(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'wideres34':
-        model = WideResNet(depth=34, num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    else:
-        raise NotImplementedError
+    model = get_model(mod_name, ds_name, device)
 
     # Set up the optimizer with the arguments
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)

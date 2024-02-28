@@ -99,20 +99,7 @@ def main():
 
     # Initialize the model based on the specified architecture
     start_tot = time.time() # start recording training time
-    if mod_name == 'res18':
-        base_model = ResNet18(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res34':
-        base_model = ResNet34(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res50':
-        base_model = ResNet50(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res101':
-        base_model = ResNet101(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res152':
-        base_model = ResNet152(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'wideres34':
-        base_model = WideResNet(depth=34, num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    else:
-        raise NotImplementedError
+    base_model = get_model(mod_name, ds_name, device)
 
     # Clean training/warmup round, if specified
     if clean_epochs == 0:
@@ -178,20 +165,7 @@ def main():
     f.write("Total training time: " + str(total_time) + "\n")
 
     # Load the final trained model, make a deepcopy, and evaluate against FGSM and PGD attacks
-    if mod_name == 'res18':
-        trained_model = ResNet18(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res34':
-        trained_model = ResNet34(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res50':
-        trained_model = ResNet50(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res101':
-        trained_model = ResNet101(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res152':
-        trained_model = ResNet152(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'wideres34':
-        trained_model = WideResNet(depth=34, num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    else:
-        raise NotImplementedError
+    trained_model = get_model(mod_name, ds_name, device)
 
     trained_model.load_state_dict(torch.load('saved-models/model-va-epochs-{}-{}-epoch{}.pt'.format(ds_name, mod_name, args.epochs)))
     model_copy = copy.deepcopy(trained_model)
