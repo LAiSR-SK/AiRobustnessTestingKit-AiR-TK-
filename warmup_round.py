@@ -1,10 +1,12 @@
+# (c) 2024 LAiSR-SK
+# This code is licensed under the MIT license (see LICENSE.md).
 from __future__ import print_function
+import os
 import time
 
-from losses import *
+from lib.loss import *
 from helper_functions import *
-from models.resnet import *
-from models.wideresnet import *
+from lib.model import *
 from helper_functions import args
 
 # Define settings
@@ -67,7 +69,7 @@ def main_warmup(ds_name, mod_name, epochs):
     """
 
     # Create file to print training progress
-    filename = 'clean-{}-{}-output.txt'.format(ds_name, mod_name)
+    filename = 'log/clean-{}-{}-output.txt'.format(ds_name, mod_name)
     f = open(filename, "a")
 
     # Initialize the model based on the specified architecture

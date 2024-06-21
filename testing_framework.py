@@ -1,3 +1,5 @@
+# (c) 2024 LAiSR-SK
+# This code is licensed under the MIT license (see LICENSE.md).
 from train import *
 from autoattack import AutoAttack
 from helper_functions import *

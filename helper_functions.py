@@ -1,3 +1,5 @@
+# (c) 2024 LAiSR-SK
+# This code is licensed under the MIT license (see LICENSE.md).
 from __future__ import print_function
 import argparse
 import ssl
@@ -10,9 +12,8 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.optim as optim
 
-from cifar_data import *
-from models.resnet import *
-from models.wideresnet import *
+from lib.data import CIFAR10, CIFAR100
+from lib.model import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152, WideResNet
 
 parser = argparse.ArgumentParser(description='PyTorch VA Adversarial Training')
 parser.add_argument('--dataset', type=str, default='cifar100', help='dataset')
@@ -38,7 +39,7 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=100, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--model-dir', default='./saved-models',
+parser.add_argument('--model-dir', default='./data/model',
                     help='directory of model for saving checkpoint')
 parser.add_argument('--save-freq', '-s', default=1, type=int, metavar='N',
                     help='save frequency')
@@ -71,7 +72,7 @@ def eval_clean(model, device, data_loader, name, ds_name, f):
 
     model.eval()
 
-    # Set the total errors to 0 for all atts but AA
+    # Set the total errors to 0 for all attacks but AA
     total_err = 0
 
     # Run tests for each element in the test set

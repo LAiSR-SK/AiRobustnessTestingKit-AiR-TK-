@@ -1,9 +1,11 @@
+# (c) 2024 LAiSR-SK
+# This code is licensed under the MIT license (see LICENSE.md).
 from __future__ import print_function
 
 from torch.optim.swa_utils import AveragedModel, SWALR
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
-from losses import *
+from lib.loss import *
 from warmup_round import *
 
 import time
@@ -28,7 +30,7 @@ parser.add_argument('--seed', type=int, default=1, metavar='S',
                     help='random seed (default: 1)')
 parser.add_argument('--log-interval', type=int, default=100, metavar='N',
                     help='how many batches to wait before logging training status')
-parser.add_argument('--model-dir', default='./saved-models',
+parser.add_argument('--model-dir', default='./data/model',
                     help='directory of model for saving checkpoint')
 parser.add_argument('--save-freq', '-s', default=1, type=int, metavar='N',
                     help='save frequency')
@@ -120,7 +122,7 @@ def main_va_epochs(ds_name, mod_name, clean_epochs=0):
     """
 
     # Set up file for printing the outut
-    filename = 'adt-va-{}-{}-output.txt'.format(ds_name, mod_name)
+    filename = 'log/adt-va-{}-{}-output.txt'.format(ds_name, mod_name)
     f = open(filename, "a")
 
     # Initialize the model based on the specified parameter
