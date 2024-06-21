@@ -1,4 +1,9 @@
+.conda
 __pycache__
 
-# model training data
-data
+# data files
+data/download/*
+data/model/*.pt
+
+# log files
+log/*.txt
