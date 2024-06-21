@@ -177,13 +177,11 @@ def adjust_learning_rate(optimizer, epoch, args):
         :param epoch: current epoch
         :param args: program arguments
     """
-
+    lr = args.lr
     if args.lr_schedule == "decay":
-        if epoch <= 74:
-            lr = args.lr
-        elif epoch <= 99:
+        if epoch >= 50:
             lr = args.lr * 0.1
-        else:
+        if epoch >= 75:
             lr = args.lr * 0.01
     elif args.lr_schedule == "scheduled":
         if epoch >= 24:
@@ -272,147 +270,48 @@ def load_data(ds_name, args, kwargs, coarse=False):
 
     return train_loader, test_loader
 
-def epochs_define_attacks(epoch, dataset):
+def class_define_attacks(dataset):
     """
-        Defines a dictionary of attacks based on the current epoch.
+        Defines a dictionary of attacks based on the image-class.
 
         :param epoch: current epoch
         :param dataset: name of dataset
 
         :return attacks: dictionary of attacks
     """
-
     attacks = {}
     if dataset == 'cifar10':
-        if epoch <= 5:
-            for i in range(4):
-                attacks[i] = 'l2-pgd-7'
-            for i in range(4, 7):
-                attacks[i] = 'l2-pgd-40'
-            for i in range(7, 10):
-                attacks[i] = 'l2-pgd-20'
-        elif epoch <= 10:
-            for i in range(4):
-                attacks[i] = 'l2-pgd-20'
-            for i in range(4, 7):
-                attacks[i] = 'l2-pgd-7'
-            for i in range(7, 10):
-                attacks[i] = 'l2-pgd-40'
-        elif epoch <= 15:
-            for i in range(4):
-                attacks[i] = 'l2-pgd-40'
-            for i in range(4, 7):
-                attacks[i] = 'l2-pgd-20'
-            for i in range(7, 10):
-                attacks[i] = 'l2-pgd-7'
-        elif epoch <= 25:
-            for i in range(10):
-                attacks[i] = 'linf-pgd-3'
-        elif epoch <= 30:
-            for i in range(3):
-                attacks[i] = 'linf-pgd-7'
-            for i in range(3, 6):
-                attacks[i] = 'linf-pgd-20'
-            for i in range(6, 8):
-                attacks[i] = 'linf-pgd-40'
-            for i in range(8, 10):
-                attacks[i] = 'mim'
-        elif epoch <= 35:
-            for i in range(3):
-                attacks[i] = 'linf-pgd-20'
-            for i in range(3, 6):
-                attacks[i] = 'linf-pgd-7'
-            for i in range(6, 8):
-                attacks[i] = 'mim'
-            for i in range(8, 10):
-                attacks[i] = 'linf-pgd-40'
-        elif epoch <= 40:
-            for i in range(3):
-                attacks[i] = 'linf-pgd-40'
-            for i in range(3, 6):
-                attacks[i] = 'mim'
-            for i in range(6, 8):
-                attacks[i] = 'linf-pgd-7'
-            for i in range(8, 10):
-                attacks[i] = 'linf-pgd-20'
-        elif epoch <= 45:
-            for i in range(3):
-                attacks[i] = 'mim'
-            for i in range(3, 6):
-                attacks[i] = 'linf-pgd-40'
-            for i in range(6, 8):
-                attacks[i] = 'linf-pgd-20'
-            for i in range(8, 10):
-                attacks[i] = 'linf-pgd-7'
-        elif epoch <= 53:
-            for i in range(2):
-                attacks[i] = 'apgd-t'
-            for i in range(2, 5):
-                attacks[i] = 'cw'
-            for i in range(5, 8):
-                attacks[i] = 'apgd-dlr'
-            for i in range(8, 10):
-                attacks[i] = 'apgd-ce'
-        elif epoch <= 61:
-            for i in range(2):
-                attacks[i] = 'apgd-ce'
-            for i in range(2, 5):
-                attacks[i] = 'apgd-t'
-            for i in range(5, 8):
-                attacks[i] = 'cw'
-            for i in range(8, 10):
-                attacks[i] = 'apgd-dlr'
-        elif epoch <= 68:
-            for i in range(2):
-                attacks[i] = 'apgd-dlr'
-            for i in range(2, 5):
-                attacks[i] = 'apgd-ce'
-            for i in range(5, 8):
-                attacks[i] = 'apgd-t'
-            for i in range(8, 10):
-                attacks[i] = 'cw'
-        elif epoch <= 75:
-            for i in range(2):
-                attacks[i] = 'cw'
-            for i in range(2, 5):
-                attacks[i] = 'apgd-dlr'
-            for i in range(5, 8):
-                attacks[i] = 'apgd-ce'
-            for i in range(8, 10):
-                attacks[i] = 'apgd-t'
-        else:
-            for i in range(10):
-                attacks[i] = 'autoattack'
+        attacks[0] = 'mim'
+        attacks[1] = 'linf-pgd-20'
+        attacks[2] = 'linf-pgd-40'
+        attacks[3] = 'cw'
+        attacks[4] = 'apgd-ce'
+        attacks[5] = 'linf-pgd-20'
+        attacks[6] = 'linf-pgd-7'
+        attacks[7] = 'apgd-dlr'
+        attacks[8] = 'apgd-t'
+        attacks[9] = 'linf-pgd-40'
     elif dataset == 'cifar100':
-        if epoch <= 25:
-            for i in range(20):
-                attacks[i] = 'linf-pgd-3'
-        elif epoch <= 45:
-            for i in range(10):
-                attacks[i] = 'linf-pgd-7'
-            for i in range(10, 20):
-                attacks[i] = 'mim'
-        elif epoch <= 65:
-            for i in range(10):
-                attacks[i] = 'mim'
-            for i in range(10, 20):
-                attacks[i] = 'linf-pgd-7'
-        elif epoch <= 85:
-            for i in range(10):
-                attacks[i] = 'linf-pgd-20'
-            for i in range(10, 20):
-                attacks[i] = 'linf-pgd-40'
-        elif epoch <= 105:
-            for i in range(10):
-                attacks[i] = 'linf-pgd-40'
-            for i in range(10, 20):
-                attacks[i] = 'linf-pgd-20'
-        elif epoch <= 140:
-            for i in range(20):
-                attacks[i] = 'cw'
-        else:
-            for i in range(20):
-                attacks[i] = 'autoattack'
+        attacks[0] = 'mim'
+        attacks[1] = 'linf-pgd-20'
+        attacks[2] = 'linf-pgd-40'
+        attacks[3] = 'cw'
+        attacks[4] = 'apgd-ce'
+        attacks[5] = 'linf-pgd-20'
+        attacks[6] = 'linf-pgd-7'
+        attacks[7] = 'apgd-dlr'
+        attacks[8] = 'apgd-t'
+        attacks[9] = 'linf-pgd-40'
+        attacks[10] = 'mim'
+        attacks[11] = 'linf-pgd-20'
+        attacks[12] = 'linf-pgd-40'
+        attacks[13] = 'cw'
+        attacks[14] = 'apgd-ce'
+        attacks[15] = 'linf-pgd-20'
+        attacks[16] = 'linf-pgd-7'
+        attacks[17] = 'apgd-dlr'
+        attacks[18] = 'apgd-t'
+        attacks[19] = 'linf-pgd-40'
     else:
         raise NotImplementedError
 

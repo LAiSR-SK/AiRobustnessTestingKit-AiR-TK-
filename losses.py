@@ -5,7 +5,41 @@ from autoattack import AutoAttack
 from helper_functions import *
 
 
-def va_loss(model, x, y, optimizer, att, device, ds, keep_clean=False):
+def adt_va_loss(model,
+             x_natural,
+             y,
+             att,
+             ds_name,
+             optimizer,
+             device):
+    """
+        Loss function for the ADT++ method. For each batch, the algorithm optimizes a distribution
+        of adversarial examples surrounding calculated adversarial images and calculates the associated
+        loss to the model.
+
+        :param model: trained image classifier
+        :param x_natural: batch of clean images from the training set
+        :param y: set of correct labels for the clean images
+        :param optimizer: optimizer for gradient calculation
+        :param learning_rate: learning rate for the optimizer for distribution optimization
+        :param epsilon: epsilon value for calculating perturbations
+        :param perturb_steps: number of steps to use to calculate the distribution
+        :param num_samples: number of samples to draw for distribution calculation
+        :param lbd: lambda entropy multiplier
+
+        :return cross-entropy loss between adversarial example drawn from distribution and correct labels
+    """
+    model.eval() # put the model in evaluation mode
+
+    # Perturb the example using VA
+    x_adv = va_get_xadv(model, x_natural, y, att, device, ds_name).to(device)
+
+    # Calculate the ADT loss
+    loss = adt_loss(model, x_adv, y, optimizer)
+
+    return loss
+
+def va_get_xadv(model, x, y, att, device, ds):
     """
         Adversarial training loss function for later various atts epoch, which simply
         calculates the loss based on the given attack.
@@ -16,11 +50,9 @@ def va_loss(model, x, y, optimizer, att, device, ds, keep_clean=False):
         :param optimizer: optimizer to be updated
         :param att: attack to be used
         :param device: current device
-        :param ds: name of dataset
-        :param keep_clean: True if clean examples are kept, False default
+        :param keep_clean: True if clean examples are kept
 
         :return loss to the classifier
-        :return metrics of the batch
     """
 
     # Set the criterion to cross-entropy loss
@@ -29,11 +61,16 @@ def va_loss(model, x, y, optimizer, att, device, ds, keep_clean=False):
     # Create the adversary for AutoAttack
     adversary = AutoAttack(model, norm='Linf', eps=.031, version='custom', verbose=False)
 
-    # Generate adversarial example based on specified attack
-    if att == 'none':
-        return standard_loss(model, x, y, optimizer)
-    elif att == 'linf-pgd-40':
+    # Based on the attack type, calculates the adversarial example
+    if att == 'linf-pgd-40':
         attack = create_attack(model, criterion, 'linf-pgd', 0.03, 40, 0.01)
+        x_adv, _ = attack.perturb(x, y)
+    elif att == 'cw':
+        x_adv = cw_whitebox(model, x, y, device, ds)
+    elif att == 'mim':
+        x_adv = mim_whitebox(model, x, y, device)
+    elif att == 'linf-pgd-3':
+        attack = create_attack(model, criterion, 'linf-pgd', 0.03, 3, 0.01)
         x_adv, _ = attack.perturb(x, y)
     elif att == 'linf-pgd-20':
         attack = create_attack(model, criterion, 'linf-pgd', 0.03, 20, 0.01)
@@ -41,34 +78,6 @@ def va_loss(model, x, y, optimizer, att, device, ds, keep_clean=False):
     elif att == 'linf-pgd-7':
         attack = create_attack(model, criterion, 'linf-pgd', 0.03, 7, 0.01)
         x_adv, _ = attack.perturb(x, y)
-    elif att == 'linf-pgd-3':
-        attack = create_attack(model, criterion, 'linf-pgd', 0.03, 3, 0.01)
-        x_adv, _ = attack.perturb(x, y)
-    elif att == 'fgsm-40':
-        attack = create_attack(model, criterion, 'fgsm', 0.03, 40, 0.01)
-        x_adv, _ = attack.perturb(x, y)
-    elif att == 'fgsm-20':
-        attack = create_attack(model, criterion, 'fgsm', 0.03, 20, 0.01)
-        x_adv, _ = attack.perturb(x, y)
-    elif att == 'fgsm-7':
-        attack = create_attack(model, criterion, 'fgsm', 0.03, 7, 0.01)
-        x_adv, _ = attack.perturb(x, y)
-    elif att == 'cw':
-        x_adv = cw_whitebox(model, x, y, device, ds)
-    elif att == 'mim':
-        x_adv = mim_whitebox(model, x, y, device)
-    elif att == 'l2-pgd-40':
-        attack = create_attack(model, criterion, 'l2-pgd', 0.03, 40, 0.01)
-        x_adv, _ = attack.perturb(x, y)
-    elif att == 'l2-pgd-20':
-        attack = create_attack(model, criterion, 'l2-pgd', 0.03, 20, 0.01)
-        x_adv, _ = attack.perturb(x, y)
-    elif att == 'l2-pgd-7':
-        attack = create_attack(model, criterion, 'l2-pgd', 0.03, 7, 0.01)
-        x_adv, _ = attack.perturb(x, y)
-    elif att == 'autoattack':
-        aa_attack = AutoAttack(model, norm='Linf', eps=0.031, version='standard', verbose=False)
-        x_adv = aa_attack.run_standard_evaluation(x, y)
     elif att == 'apgd-ce':
         adversary.attacks_to_run = ['apgd-ce']
         x_adv = adversary.run_standard_evaluation(x, y)
@@ -91,31 +100,87 @@ def va_loss(model, x, y, optimizer, att, device, ds, keep_clean=False):
         print(att)
         raise NotImplementedError
 
-    optimizer.zero_grad() # zero out the gradients
+    return x_adv
 
-    # Correctly format x_adv and y_adv
-    if keep_clean:
-        x_adv = torch.cat((x, x_adv), dim=0)
-        y_adv = torch.cat((y, y), dim=0)
-    else:
-        y_adv = y
+def adt_loss(model,
+             x_natural,
+             y,
+             optimizer,
+             learning_rate=1.0,
+             epsilon=8.0 / 255.0,
+             perturb_steps=10,
+             num_samples=10,
+             lbd=0.0):
+    """
+        Loss function for the Adversarial Distributional Training method. For each batch, the algorithm
+        optimizes a distribution of adversarial examples surrounding the images and calculates the associated
+        loss to the model.
 
-    # Calculates the adversarial output and CE loss
-    out = model(x_adv)
-    criterion = nn.CrossEntropyLoss()
-    loss = criterion(out, y_adv)
+        :param model: trained image classifier
+        :param x_natural: batch of clean images from the training set
+        :param y: set of correct labels for the clean images
+        :param optimizer: optimizer for gradient calculation
+        :param learning_rate: learning rate for the optimizer for distribution optimization
+        :param epsilon: epsilon value for calculating perturbations
+        :param perturb_steps: number of steps to use to calculate the distribution
+        :param num_samples: number of samples to draw for distribution calculation
+        :param lbd: lambda entropy multiplier
 
-    preds = out.detach() # correctly format adversarial output
+        :return cross-entropy loss between adversarial example drawn from distribution and correct labels
+    """
+    model.eval() # put the model in evaluation mode
+    batch_size = len(x_natural)
 
-    # Calculate batch metrics to be returned
-    batch_metrics = {'loss': loss.item()}
-    if keep_clean:
-        preds_clean, preds_adv = preds[:len(x)], preds[len(x):]
-        batch_metrics.update({'clean_acc': accuracy(y, preds_clean), 'adversarial_acc': accuracy(y, preds_adv)})
-    else:
-        batch_metrics.update({'adversarial_acc': accuracy(y, preds)})
+    # set the mean to a set of zeros the same size as the unperturbed image
+    mean = Variable(torch.zeros(x_natural.size()).cuda(), requires_grad=True)
+    # set the var to a set of zeros the same size as the unperturbed image
+    var = Variable(torch.zeros(x_natural.size()).cuda(), requires_grad=True)
+    # set the optimizer as an Adam optimizer based on the mean and var as model parameters
+    optimizer_adv = optim.Adam([mean, var], lr=learning_rate, betas=(0.0, 0.0))
 
-    return loss, batch_metrics
+    # For each perturbation step
+    for _ in range(perturb_steps): # perturb steps = number of steps distribution optimizer
+
+        # For each sample to be drawn
+        for s in range(num_samples): # num_samples = number of samples drawn from distribution before optimizing
+            # set adv_std to the softplus (smooth + function) of the variation
+            adv_std = F.softplus(var)
+            # set rand-noise to a tensor the same size as x_natural filled randomly with mean 0 and var 1
+            rand_noise = torch.randn_like(x_natural)
+            # set adv to the hyperbolic tan of the mean plus the random noise times standard deviation
+            adv = torch.tanh(mean + rand_noise * adv_std) # Monte-Carlo sampling from distribution
+            # omit the constants in -logp
+            # set negative_logp to the following complex equation, representing the entropy
+            negative_logp = (rand_noise ** 2) / 2. + (adv_std + 1e-8).log() + (1 - adv ** 2 + 1e-8).log()
+            entropy = negative_logp.mean()  # entropy is the average of negative_logp
+            # set x_adv to the x_natural + epsilon times adv, clamped between 0 and 1
+            x_adv = torch.clamp(x_natural + epsilon * adv, 0.0, 1.0)
+
+            # minimize the negative loss
+            # calculate the loss as the cross entropy between the classification of x_adv and y
+            # minus the entropy times lambda, then step backwards
+            with torch.enable_grad():
+                loss = -F.cross_entropy(model(x_adv), y) - lbd * entropy
+            loss.backward(retain_graph=True if s != num_samples - 1 else False)
+
+        # Step the distribution optimizer
+        optimizer_adv.step()
+
+    # set x_adv to x_natural plus epsilon times the hyperbolic tangent of the mean plus the softplus of the var
+    # times random numbers like x_natual, clamped between 0 and 1
+    x_adv = torch.clamp(x_natural + epsilon * torch.tanh(mean + F.softplus(var) * torch.randn_like(x_natural)), 0.0,
+                        1.0)
+    model.train() # set the model to training mode
+
+    # set x_adv to a variable version of x_adv clamped between 0 and 1
+    x_adv = Variable(torch.clamp(x_adv, 0.0, 1.0), requires_grad=False)
+
+    optimizer.zero_grad() # zero the gradient
+
+    # Calculate the robust loss
+    logits = model(x_adv)
+    loss = F.cross_entropy(logits, y)
+    return loss
 
 def standard_loss(model, x, y, optimizer):
     """

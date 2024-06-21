@@ -7,37 +7,6 @@ from models.resnet import *
 from models.wideresnet import *
 from helper_functions import args
 
-"""Trains a model on clean data only.
-
-Models: ResNet-18, ResNet-34, ResNet-50, ResNet-101, ResNet-152, WideResNet-34
-
-Datasets: CIFAR-10, CIFAR-100"""
-
-"""parser = argparse.ArgumentParser(description='PyTorch CIFAR Training Framework')
-parser.add_argument('--batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for training (default: 128)')
-parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for testing (default: 128)')
-parser.add_argument('--weight-decay', '--wd', default=2e-4,
-                    type=float, metavar='W')
-parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
-                    help='learning rate')
-parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
-                    help='SGD momentum')
-parser.add_argument('--no-cuda', action='store_true', default=False,
-                    help='disables CUDA training')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=100, metavar='N',
-                    help='how many batches to wait before logging training status')
-parser.add_argument('--model-dir', default='./saved-models',
-                    help='directory of model for saving checkpoint')
-parser.add_argument('--save-freq', '-s', default=1, type=int, metavar='N',
-                    help='save frequency')
-parser.add_argument('--lr-schedule', default='decay',
-                    help='schedule for adjusting learning rate')
-args = parser.parse_args()"""
-
 # Define settings
 model_dir = args.model_dir
 if not os.path.exists(model_dir):

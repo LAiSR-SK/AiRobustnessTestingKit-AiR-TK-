@@ -1,10 +1,8 @@
-from helper_functions import *
-from models.resnet import *
-from models.wideresnet import *
-from attacks import create_attack
-
+from train import *
 from autoattack import AutoAttack
-import copy
+from helper_functions import *
+
+from torch.optim.swa_utils import AveragedModel
 
 parser = argparse.ArgumentParser(description='Framework for Adversarial Testing')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
@@ -13,18 +11,9 @@ parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
                     help='input batch size for testing (default: 128)')
 parser.add_argument('--epsilon', default=0.031,
                     help='perturbation')
-parser.add_argument('--no-cuda', action='store_true', default=False,
-                    help='disables CUDA training')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
 args = parser.parse_args()
 
-use_cuda = not args.no_cuda and torch.cuda.is_available()
-torch.manual_seed(args.seed)
-device = torch.device("cuda" if use_cuda else "cpu")
-kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
-
-def run_eval(model, dataset, device, test_loader, filename):
+def run_eval(model, dataset, device, test_loader, filename, model_type):
     """
         Main function to run evaluation on a given model.
 
@@ -33,6 +22,7 @@ def run_eval(model, dataset, device, test_loader, filename):
         :param device: current device
         :param test_loader: data loader containing test set for evaluation
         :param filename: name of file to print results to
+        :param model_type: base model of the trained classifier
     """
 
     # Open an output file and put the model in eval mode
@@ -59,7 +49,6 @@ def run_eval(model, dataset, device, test_loader, filename):
 
     # Run tests for each element in the test set
     for batch_idx, (data, target) in enumerate(test_loader):
-        print("Batch: " + str(batch_idx))
         # Set up the data/X and target/y correctly for evaluation
         data, target = data.to(device), target.to(device)
         data, target = Variable(data, requires_grad=True), Variable(target)
@@ -101,6 +90,7 @@ def run_eval(model, dataset, device, test_loader, filename):
         err_linfpgd40 = (model(x_linfpgd40).data.max(1)[1] != target.data).float().sum()
 
         # Calculate the AA examples and corresponding robust errors
+        # aa
         adversary_aa = AutoAttack(model, norm='Linf', eps=.031, version='standard', verbose=False)
         x_aa = adversary_aa.run_standard_evaluation(data, target)
         err_aa = (model(x_aa).data.max(1)[1] != target.data).float().sum()
@@ -185,10 +175,6 @@ def run_eval(model, dataset, device, test_loader, filename):
 
     f.close() # close the file
 
-    print("Clean Accuracy: " + str(clean_acc) + "%\n")
-    print("FGSM Accuracy: " + str(fgsm_acc) + "%\n")
-    print("linf-pgd-7 Accuracy: " + str(linfpgd7_acc) + "%\n")
-
 def main_testing(dataset, base_model, filename, model_string):
     """
         Main function that sets up the testing process.
@@ -201,18 +187,37 @@ def main_testing(dataset, base_model, filename, model_string):
 
     # Set up the dataset and base model
     train_loader, test_loader = load_data(dataset, args, kwargs)
-    model = get_model(base_model, dataset, device)
+    if base_model == 'res18':
+        model = ResNet18(num_classes=100 if dataset == 'cifar100' else 10).to(device)
+    elif base_model == 'res34':
+        model = ResNet34(num_classes=100 if dataset == 'cifar100' else 10).to(device)
+    elif base_model == 'res50':
+        model = ResNet50(num_classes=100 if dataset == 'cifar100' else 10).to(device)
+    elif base_model == 'res101':
+        model = ResNet101(num_classes=100 if dataset == 'cifar100' else 10).to(device)
+    elif base_model == 'res152':
+        model = ResNet152(num_classes=100 if dataset == 'cifar100' else 10).to(device)
+    elif base_model == 'wideres28':
+        model = WideResNet(depth=28, num_classes=100 if dataset == 'cifar100' else 10).to(device)
+    elif base_model == 'wideres32':
+        model = WideResNet(depth=32, num_classes=100 if dataset == 'cifar100' else 10).to(device)
+    elif base_model == 'wideres34':
+        model = WideResNet(depth=34, num_classes=100 if dataset == 'cifar100' else 10).to(device)
+    elif base_model == 'wideres34swa':
+        model_base = WideResNet(depth=34, num_classes=100 if dataset == 'cifar100' else 10).to(device)
+        model = AveragedModel(model_base).to(device)
+    else:
+        raise NotImplementedError
 
     # Load in the desired model and make a deepcopy
     model.load_state_dict(torch.load(model_string))
     model_copy = copy.deepcopy(model)
-    print("Model successfully loaded")
 
     # Run the desired evaluation on the model copy and test set
     run_eval(model_copy, dataset, device, test_loader, filename, base_model)
 
 
 if __name__ == "__main__":
-    main_testing('cifar10', 'wideres34',
-                 'tests/cat-pgd-trained-together-epoch192.txt',
-                 'saved-models/model-cat-mdb-mix-cifar10-wideres34-epoch192.pt')
+    main_testing('cifar10', 'wideres34swa',
+                 'tests/adt-va-cifar10-every9-epoch82-full-results.txt',
+                 'saved-models/adt-va-every9/swa-model-adt-va-cifar10-wideres34-epoch82.pt')
