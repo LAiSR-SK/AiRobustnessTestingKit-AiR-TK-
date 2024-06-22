@@ -1,3 +1,6 @@
 [submodule "submodules/MAIR"]
 	path = submodules/MAIR
 	url = https://github.com/Harry24k/MAIR
+[submodule "submodules/adversarial-robustness-toolbox"]
+	path = submodules/adversarial-robustness-toolbox
+	url = https://github.com/Trusted-AI/adversarial-robustness-toolbox
