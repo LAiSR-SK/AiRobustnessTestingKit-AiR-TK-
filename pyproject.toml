@@ -1,0 +1,3 @@
+[tool.ruff]
+exclude = [".conda", "submodules"]
+line-length = 79

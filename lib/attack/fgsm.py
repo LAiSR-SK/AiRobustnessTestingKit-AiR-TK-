@@ -18,7 +18,15 @@ class FGSMAttack(Attack, LabelMixin):
         targeted (bool): indicate if this is a targeted attack.
     """
 
-    def __init__(self, predict, loss_fn=None, eps=0.3, clip_min=0., clip_max=1., targeted=False):
+    def __init__(
+        self,
+        predict,
+        loss_fn=None,
+        eps=0.3,
+        clip_min=0.0,
+        clip_max=1.0,
+        targeted=False,
+    ):
         super(FGSMAttack, self).__init__(predict, loss_fn, clip_min, clip_max)
 
         self.eps = eps
@@ -71,9 +79,16 @@ class FGMAttack(Attack, LabelMixin):
         targeted (bool): indicate if this is a targeted attack.
     """
 
-    def __init__(self, predict, loss_fn=None, eps=0.3, clip_min=0., clip_max=1., targeted=False):
-        super(FGMAttack, self).__init__(
-            predict, loss_fn, clip_min, clip_max)
+    def __init__(
+        self,
+        predict,
+        loss_fn=None,
+        eps=0.3,
+        clip_min=0.0,
+        clip_max=1.0,
+        targeted=False,
+    ):
+        super(FGMAttack, self).__init__(predict, loss_fn, clip_min, clip_max)
 
         self.eps = eps
         self.targeted = targeted

@@ -27,7 +27,7 @@ class Attack(object):
         Arguments:
             x (torch.Tensor): the model's input tensor.
             **kwargs: optional parameters used by child classes.
-        Returns: 
+        Returns:
             adversarial examples.
         """
         error = "Sub-classes must implement perturb."
