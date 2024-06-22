@@ -4,6 +4,8 @@ from __future__ import print_function
 import argparse
 import ssl
 
+import numpy as np
+
 import torchvision
 from torchvision import transforms
 
@@ -12,62 +14,118 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.optim as optim
 
-from lib.data import CIFAR10, CIFAR100
-from lib.model import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152, WideResNet
+from lib.data import CIFAR100
+from lib.model import (
+    ResNet18,
+    ResNet34,
+    ResNet50,
+    ResNet101,
+    ResNet152,
+    WideResNet,
+)
 
-parser = argparse.ArgumentParser(description='PyTorch VA Adversarial Training')
-parser.add_argument('--dataset', type=str, default='cifar100', help='dataset')
-parser.add_argument('--model-arch', default='wideres34',
-                    help='model architecture to train')
-parser.add_argument('--batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for training (default: 128)')
-parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for testing (default: 128)')
-parser.add_argument('--epochs', type=int, default=140, metavar='N',
-                    help='number of epochs to train')
-parser.add_argument('--warmup', type=int, default=0, metavar='N',
-                    help='number of epochs to train with clean data before AT')
-parser.add_argument('--weight-decay', '--wd', default=2e-4,
-                    type=float, metavar='W')
-parser.add_argument('--lr', type=float, default=0.1, metavar='LR',
-                    help='learning rate')
-parser.add_argument('--momentum', type=float, default=0.9, metavar='M',
-                    help='SGD momentum')
-parser.add_argument('--no-cuda', action='store_true', default=False,
-                    help='disables CUDA training')
-parser.add_argument('--seed', type=int, default=1, metavar='S',
-                    help='random seed (default: 1)')
-parser.add_argument('--log-interval', type=int, default=100, metavar='N',
-                    help='how many batches to wait before logging training status')
-parser.add_argument('--model-dir', default='./data/model',
-                    help='directory of model for saving checkpoint')
-parser.add_argument('--save-freq', '-s', default=1, type=int, metavar='N',
-                    help='save frequency')
-parser.add_argument('--lr-schedule', default='decay',
-                    help='schedule for adjusting learning rate')
-parser.add_argument('--epsilon', type=float, default=8.0 / 255.0,
-                    help='perturbation')
-parser.add_argument('--num-steps', type=int, default=20,
-                    help='perturb number of steps')
-parser.add_argument('--step-size', type=float, default=2.0 / 255.0,
-                    help='perturb step size')
-parser.add_argument('--random',
-                    default=True,
-                    help='random initialization for PGD')
+parser = argparse.ArgumentParser(description="PyTorch VA Adversarial Training")
+parser.add_argument("--dataset", type=str, default="cifar100", help="dataset")
+parser.add_argument(
+    "--model-arch", default="wideres34", help="model architecture to train"
+)
+parser.add_argument(
+    "--batch-size",
+    type=int,
+    default=128,
+    metavar="N",
+    help="input batch size for training (default: 128)",
+)
+parser.add_argument(
+    "--test-batch-size",
+    type=int,
+    default=128,
+    metavar="N",
+    help="input batch size for testing (default: 128)",
+)
+parser.add_argument(
+    "--epochs",
+    type=int,
+    default=140,
+    metavar="N",
+    help="number of epochs to train",
+)
+parser.add_argument(
+    "--warmup",
+    type=int,
+    default=0,
+    metavar="N",
+    help="number of epochs to train with clean data before AT",
+)
+parser.add_argument(
+    "--weight-decay", "--wd", default=2e-4, type=float, metavar="W"
+)
+parser.add_argument(
+    "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
+)
+parser.add_argument(
+    "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
+)
+parser.add_argument(
+    "--no-cuda",
+    action="store_true",
+    default=False,
+    help="disables CUDA training",
+)
+parser.add_argument(
+    "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
+)
+parser.add_argument(
+    "--log-interval",
+    type=int,
+    default=100,
+    metavar="N",
+    help="how many batches to wait before logging training status",
+)
+parser.add_argument(
+    "--model-dir",
+    default="./data/model",
+    help="directory of model for saving checkpoint",
+)
+parser.add_argument(
+    "--save-freq",
+    "-s",
+    default=1,
+    type=int,
+    metavar="N",
+    help="save frequency",
+)
+parser.add_argument(
+    "--lr-schedule",
+    default="decay",
+    help="schedule for adjusting learning rate",
+)
+parser.add_argument(
+    "--epsilon", type=float, default=8.0 / 255.0, help="perturbation"
+)
+parser.add_argument(
+    "--num-steps", type=int, default=20, help="perturb number of steps"
+)
+parser.add_argument(
+    "--step-size", type=float, default=2.0 / 255.0, help="perturb step size"
+)
+parser.add_argument(
+    "--random", default=True, help="random initialization for PGD"
+)
 args = parser.parse_args()
 
 
 def eval_clean(model, device, data_loader, name, ds_name, f):
     """
-        Calculates the natural error of the model on either the training
-        or test set of data
+    Calculates the natural error of the model on either the training
+    or test set of data
 
-        :param model: trained model to be evaluated
-        :param device: the device the model is set on
-        :param data_loader: data loader containing the dataset to test
-        :param name: 'train' or 'test', denoting which dataset is being tested
-        :param ds_name: name of dataset, cifar10 or cifar100
-        :param f: file to print results to
+    :param model: trained model to be evaluated
+    :param device: the device the model is set on
+    :param data_loader: data loader containing the dataset to test
+    :param name: 'train' or 'test', denoting which dataset is being tested
+    :param ds_name: name of dataset, cifar10 or cifar100
+    :param f: file to print results to
     """
 
     model.eval()
@@ -78,7 +136,7 @@ def eval_clean(model, device, data_loader, name, ds_name, f):
     # Run tests for each element in the test set
     for sample in data_loader:
         # Set up the data/X and target/y correctly for evaluation
-        if ds_name == 'cifar100':
+        if ds_name == "cifar100":
             data, target, _ = sample
         else:
             data, target = sample
@@ -92,13 +150,13 @@ def eval_clean(model, device, data_loader, name, ds_name, f):
         total_err += err
 
     # Write the total losses to the file
-    if name == 'test':
+    if name == "test":
         # Convert the clean loss to clean accuracy %
         clean_total = int(total_err)
         clean_acc = (10000 - clean_total) / 100
         print("Clean Accuracy (Test): " + str(clean_acc) + "%")
         f.write("Clean Accuracy (Test): " + str(clean_acc) + "%\n")
-    elif name == 'train':
+    elif name == "train":
         # Convert the clean loss to clean accuracy %
         clean_total = int(total_err)
         clean_acc = (50000 - clean_total) / 500
@@ -110,14 +168,14 @@ def eval_clean(model, device, data_loader, name, ds_name, f):
 
 def robust_eval(model, device, test_loader, ds_name, f):
     """
-        Calculates the clean loss and robust  loss against PGD and FGSM attacks
+    Calculates the clean loss and robust  loss against PGD and FGSM attacks
 
-        :param model: trained model to be evaluated
-        :param device: the device the model is set on
-        :param test_loader: data loader containing the testing dataset
-        :param f: the file to write results to
+    :param model: trained model to be evaluated
+    :param device: the device the model is set on
+    :param test_loader: data loader containing the testing dataset
+    :param f: the file to write results to
 
-        :return pgd_acc: the accuracy against PGD attack
+    :return pgd_acc: the accuracy against PGD attack
     """
 
     model.eval()
@@ -130,7 +188,7 @@ def robust_eval(model, device, test_loader, ds_name, f):
     # Run tests for each element in the test set
     for sample in test_loader:
         # Set up the data/X and target/y correctly for evaluation
-        if ds_name == 'cifar100':
+        if ds_name == "cifar100":
             data, target, _ = sample
         else:
             data, target = sample
@@ -138,7 +196,9 @@ def robust_eval(model, device, test_loader, ds_name, f):
         X, y = Variable(data, requires_grad=True), Variable(target)
 
         # Calculate the natural and robust error for each attack
-        pgd_err_natural, pgd_err_robust = pgd_whitebox_eval(model, X, y, device)
+        pgd_err_natural, pgd_err_robust = pgd_whitebox_eval(
+            model, X, y, device
+        )
         fgsm_err_natural, fgsm_err_robust = fgsm_whitebox_eval(model, X, y)
 
         # Add the losses to the total loss for each attack
@@ -170,13 +230,14 @@ def robust_eval(model, device, test_loader, ds_name, f):
 
     return pgd_acc
 
+
 def adjust_learning_rate(optimizer, epoch, args):
     """
-        Sets the learning rate of the optimizer based on the current epoch
+    Sets the learning rate of the optimizer based on the current epoch
 
-        :param optimizer: optimizer with learning rate being set
-        :param epoch: current epoch
-        :param args: program arguments
+    :param optimizer: optimizer with learning rate being set
+    :param epoch: current epoch
+    :param args: program arguments
     """
     lr = args.lr
     if args.lr_schedule == "decay":
@@ -221,116 +282,176 @@ def adjust_learning_rate(optimizer, epoch, args):
         else:
             lr = args.lr * 0.01
     for param_group in optimizer.param_groups:
-        param_group['lr'] = lr
+        param_group["lr"] = lr
+
 
 def load_data(ds_name, args, kwargs, coarse=False):
     """
-        Loads the specified dataset into a dataloader and returns the data split into
-        training and test loaders
+    Loads the specified dataset into a dataloader and returns the data split into
+    training and test loaders
 
-        :param ds_name: name of the dataset to load for training
-        :param args: program arguments
-        :param kwargs: more program arguments
+    :param ds_name: name of the dataset to load for training
+    :param args: program arguments
+    :param kwargs: more program arguments
 
-        :return data_loaders containing the training and testing sets
+    :return data_loaders containing the training and testing sets
     """
 
     # Establish the data loader transforms
-    transform_train = transforms.Compose([
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-    ])
-    transform_test = transforms.Compose([
-        transforms.ToTensor(),
-    ])
-    ssl._create_default_https_context = ssl._create_unverified_context # set the context for working with tensors
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.ToTensor(),
+        ]
+    )
+    ssl._create_default_https_context = (
+        ssl._create_unverified_context
+    )  # set the context for working with tensors
 
-    if ds_name == 'cifar10':
+    if (
+        ds_name == "cifar10"
+    ):  # TODO(Ezuharad): These hardcoded paths should be enumerated in a config
         # Load in the CIFAR10 dataloaders
-        trainset = torchvision.datasets.CIFAR10(root='../data', train=True, download=True, transform=transform_train)
-        train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, **kwargs)
-        testset = torchvision.datasets.CIFAR10(root='../data', train=False, download=True, transform=transform_test)
-        test_loader = torch.utils.data.DataLoader(testset, batch_size=args.test_batch_size, shuffle=False, **kwargs)
-    elif ds_name == 'cifar100':
+        trainset = torchvision.datasets.CIFAR10(
+            root="../data/download",
+            train=True,
+            download=True,
+            transform=transform_train,
+        )
+        train_loader = torch.utils.data.DataLoader(
+            trainset, batch_size=args.batch_size, shuffle=True, **kwargs
+        )
+        testset = torchvision.datasets.CIFAR10(
+            root="../data/download",
+            train=False,
+            download=True,
+            transform=transform_test,
+        )
+        test_loader = torch.utils.data.DataLoader(
+            testset, batch_size=args.test_batch_size, shuffle=False, **kwargs
+        )
+    elif ds_name == "cifar100":
         # Load in the CIFAR100 dataloaders
-        if coarse==True:
-            trainset = CIFAR100(root='../data', train=True, download=True, transform=transform_train, coarse=True)
-            train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, **kwargs)
-            testset = CIFAR100(root='../data', train=False, download=True, transform=transform_test,  coarse=True)
-            test_loader = torch.utils.data.DataLoader(testset, batch_size=args.test_batch_size, shuffle=False, **kwargs)
+        if coarse:
+            trainset = CIFAR100(
+                root="../data/download",
+                train=True,
+                download=True,
+                transform=transform_train,
+                coarse=True,
+            )
+            train_loader = torch.utils.data.DataLoader(
+                trainset, batch_size=args.batch_size, shuffle=True, **kwargs
+            )
+            testset = CIFAR100(
+                root="../data/download",
+                train=False,
+                download=True,
+                transform=transform_test,
+                coarse=True,
+            )
+            test_loader = torch.utils.data.DataLoader(
+                testset,
+                batch_size=args.test_batch_size,
+                shuffle=False,
+                **kwargs,
+            )
         else:
-            trainset = torchvision.datasets.CIFAR100(root='../data', train=True, download=True,
-                                                     transform=transform_train)
-            train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, **kwargs)
-            testset = torchvision.datasets.CIFAR100(root='../data', train=False, download=True,
-                                                    transform=transform_test)
-            test_loader = torch.utils.data.DataLoader(testset, batch_size=args.test_batch_size, shuffle=False, **kwargs)
+            trainset = torchvision.datasets.CIFAR100(
+                root="../data/download",
+                train=True,
+                download=True,
+                transform=transform_train,
+            )
+            train_loader = torch.utils.data.DataLoader(
+                trainset, batch_size=args.batch_size, shuffle=True, **kwargs
+            )
+            testset = torchvision.datasets.CIFAR100(
+                root="../data/download",
+                train=False,
+                download=True,
+                transform=transform_test,
+            )
+            test_loader = torch.utils.data.DataLoader(
+                testset,
+                batch_size=args.test_batch_size,
+                shuffle=False,
+                **kwargs,
+            )
     else:
         raise NotImplementedError
 
     return train_loader, test_loader
 
+
 def class_define_attacks(dataset):
     """
-        Defines a dictionary of attacks based on the image-class.
+    Defines a dictionary of attacks based on the image-class.
 
-        :param epoch: current epoch
-        :param dataset: name of dataset
+    :param epoch: current epoch
+    :param dataset: name of dataset
 
-        :return attacks: dictionary of attacks
+    :return attacks: dictionary of attacks
     """
     attacks = {}
-    if dataset == 'cifar10':
-        attacks[0] = 'mim'
-        attacks[1] = 'linf-pgd-20'
-        attacks[2] = 'linf-pgd-40'
-        attacks[3] = 'cw'
-        attacks[4] = 'apgd-ce'
-        attacks[5] = 'linf-pgd-20'
-        attacks[6] = 'linf-pgd-7'
-        attacks[7] = 'apgd-dlr'
-        attacks[8] = 'apgd-t'
-        attacks[9] = 'linf-pgd-40'
-    elif dataset == 'cifar100':
-        attacks[0] = 'mim'
-        attacks[1] = 'linf-pgd-20'
-        attacks[2] = 'linf-pgd-40'
-        attacks[3] = 'cw'
-        attacks[4] = 'apgd-ce'
-        attacks[5] = 'linf-pgd-20'
-        attacks[6] = 'linf-pgd-7'
-        attacks[7] = 'apgd-dlr'
-        attacks[8] = 'apgd-t'
-        attacks[9] = 'linf-pgd-40'
-        attacks[10] = 'mim'
-        attacks[11] = 'linf-pgd-20'
-        attacks[12] = 'linf-pgd-40'
-        attacks[13] = 'cw'
-        attacks[14] = 'apgd-ce'
-        attacks[15] = 'linf-pgd-20'
-        attacks[16] = 'linf-pgd-7'
-        attacks[17] = 'apgd-dlr'
-        attacks[18] = 'apgd-t'
-        attacks[19] = 'linf-pgd-40'
+    if dataset == "cifar10":
+        attacks[0] = "mim"
+        attacks[1] = "linf-pgd-20"
+        attacks[2] = "linf-pgd-40"
+        attacks[3] = "cw"
+        attacks[4] = "apgd-ce"
+        attacks[5] = "linf-pgd-20"
+        attacks[6] = "linf-pgd-7"
+        attacks[7] = "apgd-dlr"
+        attacks[8] = "apgd-t"
+        attacks[9] = "linf-pgd-40"
+    elif dataset == "cifar100":
+        attacks[0] = "mim"
+        attacks[1] = "linf-pgd-20"
+        attacks[2] = "linf-pgd-40"
+        attacks[3] = "cw"
+        attacks[4] = "apgd-ce"
+        attacks[5] = "linf-pgd-20"
+        attacks[6] = "linf-pgd-7"
+        attacks[7] = "apgd-dlr"
+        attacks[8] = "apgd-t"
+        attacks[9] = "linf-pgd-40"
+        attacks[10] = "mim"
+        attacks[11] = "linf-pgd-20"
+        attacks[12] = "linf-pgd-40"
+        attacks[13] = "cw"
+        attacks[14] = "apgd-ce"
+        attacks[15] = "linf-pgd-20"
+        attacks[16] = "linf-pgd-7"
+        attacks[17] = "apgd-dlr"
+        attacks[18] = "apgd-t"
+        attacks[19] = "linf-pgd-40"
     else:
         raise NotImplementedError
 
     return attacks
 
+
 def one_hot_tensor(y_batch_tensor, num_classes, device):
     """
-        Converts a batch tensor into a one-hot tensor
+    Converts a batch tensor into a one-hot tensor
 
-        :param y_batch_tensor: batch tensor to be converted
-        :param num_classes: number of classes to fill the tensor
-        :param device: current device
+    :param y_batch_tensor: batch tensor to be converted
+    :param num_classes: number of classes to fill the tensor
+    :param device: current device
 
-        :return one-hot tensor based on the input batch tensor
+    :return one-hot tensor based on the input batch tensor
     """
 
-    y_tensor = torch.cuda.FloatTensor(y_batch_tensor.size(0),
-                                      num_classes).fill_(0)
+    y_tensor = torch.cuda.FloatTensor(
+        y_batch_tensor.size(0), num_classes
+    ).fill_(0)
     y_tensor[np.arange(len(y_batch_tensor)), y_batch_tensor] = 1.0
     return y_tensor
 
@@ -356,15 +477,17 @@ class CWLoss(nn.Module):
         :return: loss
         """
         # Convert the target labels to a one-hot tensor
-        onehot_targets = one_hot_tensor(targets, self.num_classes,
-                                        targets.device)
+        onehot_targets = one_hot_tensor(
+            targets, self.num_classes, targets.device
+        )
 
         # Calculate self-loss (sum of targets/predictions)
         self_loss = torch.sum(onehot_targets * logits, dim=1)
 
         # Calculate other-loss
         other_loss = torch.max(
-            (1 - onehot_targets) * logits - onehot_targets * 1000, dim=1)[0]
+            (1 - onehot_targets) * logits - onehot_targets * 1000, dim=1
+        )[0]
 
         # Take the loss as the reverse sum of the loss differences plus the margin (clamped)
         loss = -torch.sum(torch.clamp(self_loss - other_loss + self.margin, 0))
@@ -379,39 +502,43 @@ class CWLoss(nn.Module):
 
 def clean(model, X, y):
     """
-        Evaluates a model on a clean sample.
+    Evaluates a model on a clean sample.
 
-        :param model: classifier to be evaluated
-        :param X: image
-        :param y: correct classification of image
+    :param model: classifier to be evaluated
+    :param X: image
+    :param y: correct classification of image
 
-        :return the error between the model prediction of the image and the correct classification
+    :return the error between the model prediction of the image and the correct classification
     """
 
-    out = model(X) # model prediction
-    err = (out.data.max(1)[1] != y.data).float().sum() # error between prediction and classification
+    out = model(X)  # model prediction
+    err = (
+        (out.data.max(1)[1] != y.data).float().sum()
+    )  # error between prediction and classification
     return err
 
 
-def pgd_whitebox_eval(model,
-                  X,
-                  y,
-                  device,
-                  epsilon=args.epsilon,
-                  num_steps=args.num_steps,
-                  step_size=args.step_size):
+def pgd_whitebox_eval(
+    model,
+    X,
+    y,
+    device,
+    epsilon=args.epsilon,
+    num_steps=args.num_steps,
+    step_size=args.step_size,
+):
     """
-        Evaluates the model by perturbing an image using the PGD attack.
+    Evaluates the model by perturbing an image using the PGD attack.
 
-        :param model: model being attacked
-        :param X: image being attacked
-        :param y: correct label of the image being attacked
-        :param device: current device
-        :param epsilon: epsilon size for the PGD attack
-        :param num_steps: number of perturbation steps
-        :param step_size: step size of perturbation steps
+    :param model: model being attacked
+    :param X: image being attacked
+    :param y: correct label of the image being attacked
+    :param device: current device
+    :param epsilon: epsilon size for the PGD attack
+    :param num_steps: number of perturbation steps
+    :param step_size: step size of perturbation steps
 
-        :return clean error and PGD error
+    :return clean error and PGD error
     """
 
     # Calculates clean error of image classification
@@ -423,7 +550,11 @@ def pgd_whitebox_eval(model,
 
     # If specified, create random noice between - and + epsilon and add to X_pgd
     if args.random:
-        random_noise = torch.FloatTensor(*X_pgd.shape).uniform_(-epsilon, epsilon).to(device)
+        random_noise = (
+            torch.FloatTensor(*X_pgd.shape)
+            .uniform_(-epsilon, epsilon)
+            .to(device)
+        )
         X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
 
     # For each perturbation step
@@ -457,16 +588,17 @@ def pgd_whitebox_eval(model,
 
     return err, err_pgd
 
+
 def fgsm_whitebox_eval(model, X, y, epsilon=args.epsilon):
     """
-        Evaluates the model by perturbing an image using the FGSM attack.
+    Evaluates the model by perturbing an image using the FGSM attack.
 
-        :param model: model being attacked
-        :param X: image being attacked
-        :param y: correct label of the image being attacked
-        :param epsilon: epsilon size for the FGSM attack
+    :param model: model being attacked
+    :param X: image being attacked
+    :param y: correct label of the image being attacked
+    :param epsilon: epsilon size for the FGSM attack
 
-        :return clean error and FGSM error
+    :return clean error and FGSM error
     """
 
     # Calculates clean error of image classification
@@ -486,7 +618,10 @@ def fgsm_whitebox_eval(model, X, y, epsilon=args.epsilon):
     loss.backward()
 
     # Discover X_fgsm by adding epsilon in the gradient direction and clamping the sample
-    X_fgsm = Variable(torch.clamp(X_fgsm.data + epsilon * X_fgsm.grad.data.sign(), 0.0, 1.0), requires_grad=True)
+    X_fgsm = Variable(
+        torch.clamp(X_fgsm.data + epsilon * X_fgsm.grad.data.sign(), 0.0, 1.0),
+        requires_grad=True,
+    )
 
     # Calculates the FGSM error between the prediction and correct classification
     err_fgsm = (model(X_fgsm).data.max(1)[1] != y.data).float().sum()
@@ -494,27 +629,29 @@ def fgsm_whitebox_eval(model, X, y, epsilon=args.epsilon):
     return err, err_fgsm
 
 
-def cw_whitebox_eval(model,
-                dataset,
-                 X,
-                 y,
-                 device,
-                 epsilon=args.epsilon,
-                 num_steps=args.num_steps,
-                 step_size=args.step_size):
+def cw_whitebox_eval(
+    model,
+    dataset,
+    X,
+    y,
+    device,
+    epsilon=args.epsilon,
+    num_steps=args.num_steps,
+    step_size=args.step_size,
+):
     """
-        Evaluates the model by perturbing an image using the CW attack.
+    Evaluates the model by perturbing an image using the CW attack.
 
-        :param model: model being attacked
-        :param dataset: name of dataset (cifar10 or cifar100)
-        :param X: image being attacked
-        :param y: correct label of the image being attacked
-        :param device: current device
-        :param epsilon: epsilon size for the CW attack
-        :param num_steps: number of perturbation steps
-        :param step_size: step size of perturbation steps
+    :param model: model being attacked
+    :param dataset: name of dataset (cifar10 or cifar100)
+    :param X: image being attacked
+    :param y: correct label of the image being attacked
+    :param device: current device
+    :param epsilon: epsilon size for the CW attack
+    :param num_steps: number of perturbation steps
+    :param step_size: step size of perturbation steps
 
-        :return clean error and CW error
+    :return clean error and CW error
     """
 
     # Calculates clean error of image classification
@@ -526,7 +663,11 @@ def cw_whitebox_eval(model,
 
     # If specified, create random noice between - and + epsilon and add to X_cw
     if args.random:
-        random_noise = torch.FloatTensor(*X_cw.shape).uniform_(-epsilon, epsilon).to(device)
+        random_noise = (
+            torch.FloatTensor(*X_cw.shape)
+            .uniform_(-epsilon, epsilon)
+            .to(device)
+        )
         X_cw = Variable(X_cw.data + random_noise, requires_grad=True)
 
     for _ in range(num_steps):
@@ -536,7 +677,7 @@ def cw_whitebox_eval(model,
 
         # With gradients, set up the CW loss and step backward
         with torch.enable_grad():
-            loss = CWLoss(100 if dataset == 'cifar100' else 10)(model(X_cw), y)
+            loss = CWLoss(100 if dataset == "cifar100" else 10)(model(X_cw), y)
         loss.backward()
 
         # Calculate the perturbation using the CW loss gradient
@@ -554,28 +695,29 @@ def cw_whitebox_eval(model,
     return err, err_cw
 
 
-def mim_whitebox_eval(model,
-                  X,
-                  y,
-                  device,
-                  epsilon=args.epsilon,
-                  num_steps=args.num_steps,
-                  step_size=args.step_size,
-                  decay_factor=1.0):
-
+def mim_whitebox_eval(
+    model,
+    X,
+    y,
+    device,
+    epsilon=args.epsilon,
+    num_steps=args.num_steps,
+    step_size=args.step_size,
+    decay_factor=1.0,
+):
     """
-        Evaluates the model by perturbing an image using the MIM attack.
+    Evaluates the model by perturbing an image using the MIM attack.
 
-        :param model: model being attacked
-        :param X: image being attacked
-        :param y: correct label of the image being attacked
-        :param device: current device
-        :param epsilon: epsilon size for the MIM attack
-        :param num_steps: number of perturbation steps
-        :param step_size: step size of perturbation steps
-        :param decay_factor: coefficient for previous gradient usage in MIM attack
+    :param model: model being attacked
+    :param X: image being attacked
+    :param y: correct label of the image being attacked
+    :param device: current device
+    :param epsilon: epsilon size for the MIM attack
+    :param num_steps: number of perturbation steps
+    :param step_size: step size of perturbation steps
+    :param decay_factor: coefficient for previous gradient usage in MIM attack
 
-        :return clean error and MIM error
+    :return clean error and MIM error
     """
 
     # Calculates clean error of image classification
@@ -587,7 +729,11 @@ def mim_whitebox_eval(model,
 
     # If specified, create random noice between - and + epsilon and add to X_cw
     if args.random:
-        random_noise = torch.FloatTensor(*X_mim.shape).uniform_(-epsilon, epsilon).to(device)
+        random_noise = (
+            torch.FloatTensor(*X_mim.shape)
+            .uniform_(-epsilon, epsilon)
+            .to(device)
+        )
         X_mim = Variable(X_mim.data + random_noise, requires_grad=True)
 
     # Set up tensor to hold previous gradients
@@ -604,9 +750,13 @@ def mim_whitebox_eval(model,
         loss.backward()
 
         # Calculate the perturbation using the current and previous gradient
-        grad = X_mim.grad.data / torch.mean(torch.abs(X_mim.grad.data), [1, 2, 3], keepdim=True)
+        grad = X_mim.grad.data / torch.mean(
+            torch.abs(X_mim.grad.data), [1, 2, 3], keepdim=True
+        )
         previous_grad = decay_factor * previous_grad + grad
-        X_mim = Variable(X_mim.data + step_size * previous_grad.sign(), requires_grad=True)
+        X_mim = Variable(
+            X_mim.data + step_size * previous_grad.sign(), requires_grad=True
+        )
         eta = torch.clamp(X_mim.data - X.data, -epsilon, epsilon)
 
         # Add the perturbation and clamp x_mim
@@ -619,26 +769,28 @@ def mim_whitebox_eval(model,
     return err, err_mim
 
 
-def cw_whitebox(model,
-                 X,
-                 y,
-                 device,
-                 dataset,
-                 epsilon=args.epsilon,
-                 num_steps=args.num_steps,
-                 step_size=args.step_size):
+def cw_whitebox(
+    model,
+    X,
+    y,
+    device,
+    dataset,
+    epsilon=args.epsilon,
+    num_steps=args.num_steps,
+    step_size=args.step_size,
+):
     """
-        Attacks the specified image X using the CW attack and returns the adversarial example
+    Attacks the specified image X using the CW attack and returns the adversarial example
 
-        :param model: model being attacked
-        :param X: image being attacked
-        :param y: correct label of the image being attacked
-        :param device: current device
-        :param epsilon: epsilon size for the PGD attack
-        :param num_steps: number of perturbation steps
-        :param step_size: step size of perturbation steps
+    :param model: model being attacked
+    :param X: image being attacked
+    :param y: correct label of the image being attacked
+    :param device: current device
+    :param epsilon: epsilon size for the PGD attack
+    :param num_steps: number of perturbation steps
+    :param step_size: step size of perturbation steps
 
-        :return adversarial example found with the CW attack
+    :return adversarial example found with the CW attack
     """
 
     # Create X_pgd basis by duplicating X as a variable
@@ -646,7 +798,11 @@ def cw_whitebox(model,
 
     # If adding random, create random noice between - and + epsilon and add to X_pgd
     if args.random:
-        random_noise = torch.FloatTensor(*X_pgd.shape).uniform_(-epsilon, epsilon).to(device)
+        random_noise = (
+            torch.FloatTensor(*X_pgd.shape)
+            .uniform_(-epsilon, epsilon)
+            .to(device)
+        )
         X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
 
     # For each perturbation step:
@@ -657,7 +813,9 @@ def cw_whitebox(model,
 
         # With gradients, set up the CW loss and step backward
         with torch.enable_grad():
-            loss = CWLoss(100 if dataset == 'cifar100' else 10)(model(X_pgd), y)
+            loss = CWLoss(100 if dataset == "cifar100" else 10)(
+                model(X_pgd), y
+            )
         loss.backward()
 
         # Calculate the perturbation eta as the step size in the gradient direction of X_pgd
@@ -676,27 +834,30 @@ def cw_whitebox(model,
         X_pgd = Variable(torch.clamp(X_pgd, 0, 1.0), requires_grad=True)
     return X_pgd
 
-def mim_whitebox(model,
-                  X,
-                  y,
-                  device,
-                  epsilon=args.epsilon,
-                  num_steps=args.num_steps,
-                  step_size=args.step_size,
-                  decay_factor=1.0):
+
+def mim_whitebox(
+    model,
+    X,
+    y,
+    device,
+    epsilon=args.epsilon,
+    num_steps=args.num_steps,
+    step_size=args.step_size,
+    decay_factor=1.0,
+):
     """
-        Attacks the specified image X using the MIM attack and returns the adversarial example
+    Attacks the specified image X using the MIM attack and returns the adversarial example
 
-        :param model: model being attacked
-        :param X: image being attacked
-        :param y: correct label of the image being attacked
-        :param device: current device
-        :param epsilon: epsilon size for the PGD attack
-        :param num_steps: number of perturbation steps
-        :param step_size: step size of perturbation steps
-        :param decay_factor: factor of decay for gradients
+    :param model: model being attacked
+    :param X: image being attacked
+    :param y: correct label of the image being attacked
+    :param device: current device
+    :param epsilon: epsilon size for the PGD attack
+    :param num_steps: number of perturbation steps
+    :param step_size: step size of perturbation steps
+    :param decay_factor: factor of decay for gradients
 
-        :return adversarial example found with the MIM attack
+    :return adversarial example found with the MIM attack
     """
 
     # Create X_pgd basis by duplicating X as a variable
@@ -704,7 +865,11 @@ def mim_whitebox(model,
 
     # If adding random, create random noice between - and + epsilon and add to X_pgd
     if args.random:
-        random_noise = torch.FloatTensor(*X_pgd.shape).uniform_(-epsilon, epsilon).to(device)
+        random_noise = (
+            torch.FloatTensor(*X_pgd.shape)
+            .uniform_(-epsilon, epsilon)
+            .to(device)
+        )
         X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
 
     # Set the previous gradient to a tensor of 0s in the shape of X
@@ -722,13 +887,17 @@ def mim_whitebox(model,
         loss.backward()
 
         # Calculate the gradient by dividing it by the average
-        grad = X_pgd.grad.data / torch.mean(torch.abs(X_pgd.grad.data), [1, 2, 3], keepdim=True)
+        grad = X_pgd.grad.data / torch.mean(
+            torch.abs(X_pgd.grad.data), [1, 2, 3], keepdim=True
+        )
 
         # Calculate the previous gradient by multiplying it by the decay factor and adding to the grad
         previous_grad = decay_factor * previous_grad + grad
 
         # Perturb X_pgd in the direction of the previous grad, by the step size
-        X_pgd = Variable(X_pgd.data + step_size * previous_grad.sign(), requires_grad=True)
+        X_pgd = Variable(
+            X_pgd.data + step_size * previous_grad.sign(), requires_grad=True
+        )
 
         # Set the perturbation to the difference between X and X_adv, clamped by +/- epsilon
         eta = torch.clamp(X_pgd.data - X.data, -epsilon, epsilon)
@@ -740,19 +909,34 @@ def mim_whitebox(model,
         X_pgd = Variable(torch.clamp(X_pgd, 0, 1.0), requires_grad=True)
     return X_pgd
 
+
 def get_model(mod_name, ds_name, device):
-    if mod_name == 'res18':
-        model = ResNet18(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res34':
-        model = ResNet34(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res50':
-        model = ResNet50(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res101':
-        model = ResNet101(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'res152':
-        model = ResNet152(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
-    elif mod_name == 'wideres34':
-        model = WideResNet(depth=34, num_classes=100 if ds_name == 'cifar100' else 10).to(device)
+    if mod_name == "res18":
+        model = ResNet18(
+            num_classes=100 if ds_name == "cifar100" else 10
+        ).to(
+            device
+        )  # TODO(Ezuharad): this style of hardcoding is not good, we should use a class attribute
+    elif mod_name == "res34":
+        model = ResNet34(num_classes=100 if ds_name == "cifar100" else 10).to(
+            device
+        )
+    elif mod_name == "res50":
+        model = ResNet50(num_classes=100 if ds_name == "cifar100" else 10).to(
+            device
+        )
+    elif mod_name == "res101":
+        model = ResNet101(num_classes=100 if ds_name == "cifar100" else 10).to(
+            device
+        )
+    elif mod_name == "res152":
+        model = ResNet152(num_classes=100 if ds_name == "cifar100" else 10).to(
+            device
+        )
+    elif mod_name == "wideres34":
+        model = WideResNet(
+            depth=34, num_classes=100 if ds_name == "cifar100" else 10
+        ).to(device)
     else:
         raise NotImplementedError
 

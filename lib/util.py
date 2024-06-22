@@ -3,10 +3,18 @@
 import numpy as np
 
 import torch
-from torch.autograd import Variable
 
 from torch.distributions import laplace
 from torch.distributions import uniform
+
+from .model import (
+    ResNet18,
+    ResNet34,
+    ResNet50,
+    ResNet101,
+    ResNet152,
+    WideResNet,
+)
 
 
 def replicate_input(x):
@@ -27,7 +35,7 @@ def calc_l2distsq(x, y):
     """
     Calculate L2 distance between tensors x and y.
     """
-    d = (x - y)**2
+    d = (x - y) ** 2
     return d.view(d.shape[0], -1).sum(dim=1)
 
 
@@ -71,7 +79,8 @@ def _batch_multiply_tensor_by_vector(vector, batch_tensor):
     return batch_tensor
     """
     return (
-        batch_tensor.transpose(0, -1) * vector).transpose(0, -1).contiguous()
+        (batch_tensor.transpose(0, -1) * vector).transpose(0, -1).contiguous()
+    )
 
 
 def _batch_clamp_tensor_by_vector(vector, batch_tensor):
@@ -80,9 +89,11 @@ def _batch_clamp_tensor_by_vector(vector, batch_tensor):
         batch_tensor[ii] = clamp(
             batch_tensor[ii], -vector[ii], vector[ii])
     """
-    return torch.min(
-        torch.max(batch_tensor.transpose(0, -1), -vector), vector
-    ).transpose(0, -1).contiguous()
+    return (
+        torch.min(torch.max(batch_tensor.transpose(0, -1), -vector), vector)
+        .transpose(0, -1)
+        .contiguous()
+    )
 
 
 def batch_multiply(float_or_vector, tensor):
@@ -119,7 +130,7 @@ def _get_norm_batch(x, p):
     Returns the Lp norm of batch x.
     """
     batch_size = x.size(0)
-    return x.abs().pow(p).view(batch_size, -1).sum(dim=1).pow(1. / p)
+    return x.abs().pow(p).view(batch_size, -1).sum(dim=1).pow(1.0 / p)
 
 
 def _thresh_by_magnitude(theta, x):
@@ -157,13 +168,13 @@ def normalize_by_pnorm(x, p=2, small_constant=1e-6):
         x (torch.Tensor): tensor containing the gradients on the input.
         p (int): (optional) order of the norm for the normalization (1 or 2).
         small_constant (float): (optional) to avoid dividing by zero.
-    Returns: 
+    Returns:
         normalized gradients.
     """
     assert isinstance(p, float) or isinstance(p, int)
     norm = _get_norm_batch(x, p)
     norm = torch.max(norm, torch.ones_like(norm) * small_constant)
-    return batch_multiply(1. / norm, x)
+    return batch_multiply(1.0 / norm, x)
 
 
 def rand_init_delta(delta, x, ord, eps, clip_min, clip_max):
@@ -182,7 +193,8 @@ def rand_init_delta(delta, x, ord, eps, clip_min, clip_max):
         delta.data = clamp_by_pnorm(delta.data, ord, eps)
     elif ord == 1:
         ini = laplace.Laplace(
-            loc=delta.new_tensor(0), scale=delta.new_tensor(1))
+            loc=delta.new_tensor(0), scale=delta.new_tensor(1)
+        )
         delta.data = ini.sample(delta.data.shape)
         delta.data = normalize_by_pnorm(delta.data, p=1)
         ray = uniform.Uniform(0, eps).sample()
@@ -192,6 +204,36 @@ def rand_init_delta(delta, x, ord, eps, clip_min, clip_max):
         error = "Only ord = inf, ord = 1 and ord = 2 have been implemented"
         raise NotImplementedError(error)
 
-    delta.data = clamp(
-        x + delta.data, min=clip_min, max=clip_max) - x
+    delta.data = clamp(x + delta.data, min=clip_min, max=clip_max) - x
     return delta.data
+
+
+def get_model(mod_name, ds_name, device):
+    if mod_name == "res18":
+        model = ResNet18(num_classes=100 if ds_name == "cifar100" else 10).to(
+            device
+        )
+    elif mod_name == "res34":
+        model = ResNet34(num_classes=100 if ds_name == "cifar100" else 10).to(
+            device
+        )
+    elif mod_name == "res50":
+        model = ResNet50(num_classes=100 if ds_name == "cifar100" else 10).to(
+            device
+        )
+    elif mod_name == "res101":
+        model = ResNet101(num_classes=100 if ds_name == "cifar100" else 10).to(
+            device
+        )
+    elif mod_name == "res152":
+        model = ResNet152(num_classes=100 if ds_name == "cifar100" else 10).to(
+            device
+        )
+    elif mod_name == "wideres34":
+        model = WideResNet(
+            depth=34, num_classes=100 if ds_name == "cifar100" else 10
+        ).to(device)
+    else:
+        raise NotImplementedError
+
+    return model

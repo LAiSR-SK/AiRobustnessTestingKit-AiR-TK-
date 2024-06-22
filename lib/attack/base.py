@@ -1,7 +1,6 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 import torch
-import torch.nn as nn
 
 from ..util import replicate_input
 
@@ -28,7 +27,7 @@ class Attack(object):
         Arguments:
             x (torch.Tensor): the model's input tensor.
             **kwargs: optional parameters used by child classes.
-        Returns: 
+        Returns:
             adversarial examples.
         """
         error = "Sub-classes must implement perturb."

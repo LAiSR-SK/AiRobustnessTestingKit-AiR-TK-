@@ -2,18 +2,17 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 # This is a modified version of https://github.com/pytorch/vision/blob/master/torchvision/datasets/cifar.py
 from __future__ import print_function
-from PIL import Image
 import os
 import os.path
-import numpy as np
+import pickle
 import sys
-if sys.version_info[0] == 2:
-    import cPickle as pickle
-else:
-    import pickle
+
+import numpy as np
 
 import torch.utils.data as data
 from torchvision.datasets.utils import download_url, check_integrity
+
+from PIL import Image
 
 
 class CIFAR10(data.Dataset):
@@ -31,26 +30,32 @@ class CIFAR10(data.Dataset):
             puts it in root directory. If dataset is already downloaded, it is not
             downloaded again.
     """
-    base_folder = 'cifar-10-batches-py'
+
+    base_folder = "cifar-10-batches-py"
     url = "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz"
     filename = "cifar-10-python.tar.gz"
-    tgz_md5 = 'c58f30108f718f92721af3b95e74349a'
+    tgz_md5 = "c58f30108f718f92721af3b95e74349a"
     train_list = [
-        ['data_batch_1', 'c99cafc152244af753f735de768cd75f'],
-        ['data_batch_2', 'd4bba439e000b95fd0a9bffe97cbabec'],
-        ['data_batch_3', '54ebc095f3ab1f0389bbae665268c751'],
-        ['data_batch_4', '634d18415352ddfa80567beed471001a'],
-        ['data_batch_5', '482c414d41f54cd18b22e5b47cb7c3cb'],
+        ["data_batch_1", "c99cafc152244af753f735de768cd75f"],
+        ["data_batch_2", "d4bba439e000b95fd0a9bffe97cbabec"],
+        ["data_batch_3", "54ebc095f3ab1f0389bbae665268c751"],
+        ["data_batch_4", "634d18415352ddfa80567beed471001a"],
+        ["data_batch_5", "482c414d41f54cd18b22e5b47cb7c3cb"],
     ]
 
     test_list = [
-        ['test_batch', '40351d587109b95175f43aff81a1287e'],
+        ["test_batch", "40351d587109b95175f43aff81a1287e"],
     ]
 
-
-    def __init__(self, root, train=True,
-                 transform=None, target_transform=None,
-                 download=False, coarse=False):
+    def __init__(
+        self,
+        root,
+        train=True,
+        transform=None,
+        target_transform=None,
+        download=False,
+        coarse=False,
+    ):
         self.root = os.path.expanduser(root)
         self.transform = transform
         self.target_transform = target_transform
@@ -61,8 +66,10 @@ class CIFAR10(data.Dataset):
             self.download()
 
         if not self._check_integrity():
-            raise RuntimeError('Dataset not found or corrupted.' +
-                               ' You can use download=True to download it')
+            raise RuntimeError(
+                "Dataset not found or corrupted."
+                + " You can use download=True to download it"
+            )
 
         # now load the picked numpy arrays
         if self.train:
@@ -72,41 +79,45 @@ class CIFAR10(data.Dataset):
             for fentry in self.train_list:
                 f = fentry[0]
                 file = os.path.join(self.root, self.base_folder, f)
-                fo = open(file, 'rb')
+                fo = open(file, "rb")
                 if sys.version_info[0] == 2:
                     entry = pickle.load(fo)
                 else:
-                    entry = pickle.load(fo, encoding='latin1')
-                self.train_data.append(entry['data'])
-                if 'labels' in entry:
-                    self.train_labels += entry['labels']
+                    entry = pickle.load(fo, encoding="latin1")
+                self.train_data.append(entry["data"])
+                if "labels" in entry:
+                    self.train_labels += entry["labels"]
                 else:
-                    self.train_labels += entry['fine_labels']
+                    self.train_labels += entry["fine_labels"]
                     if self.coarse:
-                        self.train_coarse_labels += entry['coarse_labels']
+                        self.train_coarse_labels += entry["coarse_labels"]
                 fo.close()
 
             self.train_data = np.concatenate(self.train_data)
             self.train_data = self.train_data.reshape((50000, 3, 32, 32))
-            self.train_data = self.train_data.transpose((0, 2, 3, 1))  # convert to HWC
+            self.train_data = self.train_data.transpose(
+                (0, 2, 3, 1)
+            )  # convert to HWC
         else:
             f = self.test_list[0][0]
             file = os.path.join(self.root, self.base_folder, f)
-            fo = open(file, 'rb')
+            fo = open(file, "rb")
             if sys.version_info[0] == 2:
                 entry = pickle.load(fo)
             else:
-                entry = pickle.load(fo, encoding='latin1')
-            self.test_data = entry['data']
-            if 'labels' in entry:
-                self.test_labels = entry['labels']
+                entry = pickle.load(fo, encoding="latin1")
+            self.test_data = entry["data"]
+            if "labels" in entry:
+                self.test_labels = entry["labels"]
             else:
-                self.test_labels = entry['fine_labels']
+                self.test_labels = entry["fine_labels"]
                 if self.coarse:
-                    self.test_coarse_labels = entry['coarse_labels']
+                    self.test_coarse_labels = entry["coarse_labels"]
             fo.close()
             self.test_data = self.test_data.reshape((10000, 3, 32, 32))
-            self.test_data = self.test_data.transpose((0, 2, 3, 1))  # convert to HWC
+            self.test_data = self.test_data.transpose(
+                (0, 2, 3, 1)
+            )  # convert to HWC
 
     def __getitem__(self, index):
         """
@@ -146,7 +157,7 @@ class CIFAR10(data.Dataset):
 
     def _check_integrity(self):
         root = self.root
-        for fentry in (self.train_list + self.test_list):
+        for fentry in self.train_list + self.test_list:
             filename, md5 = fentry[0], fentry[1]
             fpath = os.path.join(root, self.base_folder, filename)
             if not check_integrity(fpath, md5):
@@ -157,7 +168,7 @@ class CIFAR10(data.Dataset):
         import tarfile
 
         if self._check_integrity():
-            print('Files already downloaded and verified')
+            print("Files already downloaded and verified")
             return
 
         root = self.root
@@ -176,14 +187,15 @@ class CIFAR100(CIFAR10):
     """`CIFAR100 <https://www.cs.toronto.edu/~kriz/cifar.html>`_ Dataset.
     This is a subclass of the `CIFAR10` Dataset.
     """
-    base_folder = 'cifar-100-python'
+
+    base_folder = "cifar-100-python"
     url = "https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz"
     filename = "cifar-100-python.tar.gz"
-    tgz_md5 = 'eb9058c3a382ffc7106e4002c42a8d85'
+    tgz_md5 = "eb9058c3a382ffc7106e4002c42a8d85"
     train_list = [
-        ['train', '16019d7e3df5f24257cddd939b257f8d'],
+        ["train", "16019d7e3df5f24257cddd939b257f8d"],
     ]
 
     test_list = [
-        ['test', 'f0ef6b0ae62326f3e7ffdfab6717acfc'],
+        ["test", "f0ef6b0ae62326f3e7ffdfab6717acfc"],
     ]

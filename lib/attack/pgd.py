@@ -15,8 +15,20 @@ from ..util import normalize_by_pnorm
 from ..util import rand_init_delta
 
 
-def perturb_iterative(xvar, yvar, predict, nb_iter, eps, eps_iter, loss_fn, delta_init=None, minimize=False, ord=np.inf, 
-                      clip_min=0.0, clip_max=1.0):
+def perturb_iterative(
+    xvar,
+    yvar,
+    predict,
+    nb_iter,
+    eps,
+    eps_iter,
+    loss_fn,
+    delta_init=None,
+    minimize=False,
+    ord=np.inf,
+    clip_min=0.0,
+    clip_max=1.0,
+):
     """
     Iteratively maximize the loss over the input. It is a shared method for iterative atts.
     Arguments:
@@ -32,8 +44,8 @@ def perturb_iterative(xvar, yvar, predict, nb_iter, eps, eps_iter, loss_fn, delt
         ord (int): (optional) the order of maximum distortion (inf or 2).
         clip_min (float): mininum value per input dimension.
         clip_max (float): maximum value per input dimension.
-    Returns: 
-        torch.Tensor containing the perturbed input, 
+    Returns:
+        torch.Tensor containing the perturbed input,
         torch.Tensor containing the perturbation
     """
     if delta_init is not None:
@@ -53,12 +65,16 @@ def perturb_iterative(xvar, yvar, predict, nb_iter, eps, eps_iter, loss_fn, delt
             grad_sign = delta.grad.data.sign()
             delta.data = delta.data + batch_multiply(eps_iter, grad_sign)
             delta.data = batch_clamp(eps, delta.data)
-            delta.data = clamp(xvar.data + delta.data, clip_min, clip_max) - xvar.data
+            delta.data = (
+                clamp(xvar.data + delta.data, clip_min, clip_max) - xvar.data
+            )
         elif ord == 2:
             grad = delta.grad.data
             grad = normalize_by_pnorm(grad)
             delta.data = delta.data + batch_multiply(eps_iter, grad)
-            delta.data = clamp(xvar.data + delta.data, clip_min, clip_max) - xvar.data
+            delta.data = (
+                clamp(xvar.data + delta.data, clip_min, clip_max) - xvar.data
+            )
             if eps is not None:
                 delta.data = clamp_by_pnorm(delta.data, ord, eps)
         else:
@@ -81,7 +97,7 @@ class PGDAttack(Attack, LabelMixin):
         eps (float): maximum distortion.
         nb_iter (int): number of iterations.
         eps_iter (float): attack step size.
-        rand_init (bool): (optional) random initialization.    
+        rand_init (bool): (optional) random initialization.
         clip_min (float): mininum value per input dimension.
         clip_max (float): maximum value per input dimension.
         ord (int): (optional) the order of maximum distortion (inf or 2).
@@ -90,8 +106,19 @@ class PGDAttack(Attack, LabelMixin):
     """
 
     def __init__(
-            self, predict, loss_fn=None, eps=0.3, nb_iter=40, eps_iter=0.01, rand_init=True, clip_min=0., clip_max=1.,
-            ord=np.inf, targeted=False, rand_init_type='uniform'):
+        self,
+        predict,
+        loss_fn=None,
+        eps=0.3,
+        nb_iter=40,
+        eps_iter=0.01,
+        rand_init=True,
+        clip_min=0.0,
+        clip_max=1.0,
+        ord=np.inf,
+        targeted=False,
+        rand_init_type="uniform",
+    ):
         super(PGDAttack, self).__init__(predict, loss_fn, clip_min, clip_max)
         self.eps = eps
         self.nb_iter = nb_iter
@@ -114,28 +141,45 @@ class PGDAttack(Attack, LabelMixin):
                 - if None and self.targeted=False, compute y as predicted
                 labels.
                 - if self.targeted=True, then y must be the targeted labels.
-        Returns: 
+        Returns:
             torch.Tensor containing perturbed inputs,
-            torch.Tensor containing the perturbation    
+            torch.Tensor containing the perturbation
         """
         x, y = self._verify_and_process_inputs(x, y)
 
         delta = torch.zeros_like(x)
         delta = nn.Parameter(delta)
         if self.rand_init:
-            if self.rand_init_type == 'uniform':
+            if self.rand_init_type == "uniform":
                 rand_init_delta(
-                    delta, x, self.ord, self.eps, self.clip_min, self.clip_max)
-                delta.data = clamp(
-                    x + delta.data, min=self.clip_min, max=self.clip_max) - x
-            elif self.rand_init_type == 'normal':
-                delta.data = 0.001 * torch.randn_like(x) # initialize as in TRADES
+                    delta, x, self.ord, self.eps, self.clip_min, self.clip_max
+                )
+                delta.data = (
+                    clamp(x + delta.data, min=self.clip_min, max=self.clip_max)
+                    - x
+                )
+            elif self.rand_init_type == "normal":
+                delta.data = 0.001 * torch.randn_like(
+                    x
+                )  # initialize as in TRADES
             else:
-                raise NotImplementedError('Only rand_init_type=normal and rand_init_type=uniform have been implemented.')
-        
+                raise NotImplementedError(
+                    "Only rand_init_type=normal and rand_init_type=uniform have been implemented."
+                )
+
         x_adv, r_adv = perturb_iterative(
-            x, y, self.predict, nb_iter=self.nb_iter, eps=self.eps, eps_iter=self.eps_iter, loss_fn=self.loss_fn, 
-            minimize=self.targeted, ord=self.ord, clip_min=self.clip_min, clip_max=self.clip_max, delta_init=delta
+            x,
+            y,
+            self.predict,
+            nb_iter=self.nb_iter,
+            eps=self.eps,
+            eps_iter=self.eps_iter,
+            loss_fn=self.loss_fn,
+            minimize=self.targeted,
+            ord=self.ord,
+            clip_min=self.clip_min,
+            clip_max=self.clip_max,
+            delta_init=delta,
         )
 
         return x_adv.data, r_adv.data
@@ -150,7 +194,7 @@ class LinfPGDAttack(PGDAttack):
         eps (float): maximum distortion.
         nb_iter (int): number of iterations.
         eps_iter (float): attack step size.
-        rand_init (bool): (optional) random initialization.    
+        rand_init (bool): (optional) random initialization.
         clip_min (float): mininum value per input dimension.
         clip_max (float): maximum value per input dimension.
         targeted (bool): if the attack is targeted.
@@ -158,12 +202,32 @@ class LinfPGDAttack(PGDAttack):
     """
 
     def __init__(
-            self, predict, loss_fn=None, eps=0.3, nb_iter=40, eps_iter=0.01, rand_init=True, clip_min=0., clip_max=1.,
-            targeted=False, rand_init_type='uniform'):
+        self,
+        predict,
+        loss_fn=None,
+        eps=0.3,
+        nb_iter=40,
+        eps_iter=0.01,
+        rand_init=True,
+        clip_min=0.0,
+        clip_max=1.0,
+        targeted=False,
+        rand_init_type="uniform",
+    ):
         ord = np.inf
         super(LinfPGDAttack, self).__init__(
-            predict=predict, loss_fn=loss_fn, eps=eps, nb_iter=nb_iter, eps_iter=eps_iter, rand_init=rand_init, 
-            clip_min=clip_min, clip_max=clip_max, targeted=targeted, ord=ord, rand_init_type=rand_init_type)
+            predict=predict,
+            loss_fn=loss_fn,
+            eps=eps,
+            nb_iter=nb_iter,
+            eps_iter=eps_iter,
+            rand_init=rand_init,
+            clip_min=clip_min,
+            clip_max=clip_max,
+            targeted=targeted,
+            ord=ord,
+            rand_init_type=rand_init_type,
+        )
 
 
 class L2PGDAttack(PGDAttack):
@@ -175,7 +239,7 @@ class L2PGDAttack(PGDAttack):
         eps (float): maximum distortion.
         nb_iter (int): number of iterations.
         eps_iter (float): attack step size.
-        rand_init (bool): (optional) random initialization.    
+        rand_init (bool): (optional) random initialization.
         clip_min (float): mininum value per input dimension.
         clip_max (float): maximum value per input dimension.
         targeted (bool): if the attack is targeted.
@@ -183,9 +247,29 @@ class L2PGDAttack(PGDAttack):
     """
 
     def __init__(
-            self, predict, loss_fn=None, eps=0.3, nb_iter=40, eps_iter=0.01, rand_init=True, clip_min=0., clip_max=1.,
-            targeted=False, rand_init_type='uniform'):
+        self,
+        predict,
+        loss_fn=None,
+        eps=0.3,
+        nb_iter=40,
+        eps_iter=0.01,
+        rand_init=True,
+        clip_min=0.0,
+        clip_max=1.0,
+        targeted=False,
+        rand_init_type="uniform",
+    ):
         ord = 2
         super(L2PGDAttack, self).__init__(
-            predict=predict, loss_fn=loss_fn, eps=eps, nb_iter=nb_iter, eps_iter=eps_iter, rand_init=rand_init, 
-            clip_min=clip_min, clip_max=clip_max, targeted=targeted, ord=ord, rand_init_type=rand_init_type)
+            predict=predict,
+            loss_fn=loss_fn,
+            eps=eps,
+            nb_iter=nb_iter,
+            eps_iter=eps_iter,
+            rand_init=rand_init,
+            clip_min=clip_min,
+            clip_max=clip_max,
+            targeted=targeted,
+            ord=ord,
+            rand_init_type=rand_init_type,
+        )

@@ -1,30 +1,67 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-from train import *
-from autoattack import AutoAttack
-from helper_functions import *
+import argparse
+import copy
 
+import torch
+from torch import nn
+from torch.autograd import Variable
 from torch.optim.swa_utils import AveragedModel
 
-parser = argparse.ArgumentParser(description='Framework for Adversarial Testing')
-parser.add_argument('--batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for training (default: 128)')
-parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
-                    help='input batch size for testing (default: 128)')
-parser.add_argument('--epsilon', default=0.031,
-                    help='perturbation')
+from autoattack import AutoAttack
+
+from lib.attack import create_attack
+from lib.model import (
+    ResNet18,
+    ResNet34,
+    ResNet50,
+    ResNet101,
+    ResNet152,
+    WideResNet,
+)
+from helper_functions import (
+    cw_whitebox_eval,
+    fgsm_whitebox_eval,
+    mim_whitebox_eval,
+    load_data,
+)
+
+kwargs = (
+    {"num_workers": 1, "pin_memory": True} if torch.cuda.is_available() else {}
+)
+parser = argparse.ArgumentParser(
+    description="Framework for Adversarial Testing"
+)
+parser.add_argument(
+    "--batch-size",
+    type=int,
+    default=128,
+    metavar="N",
+    help="input batch size for training (default: 128)",
+)
+parser.add_argument(
+    "--test-batch-size",
+    type=int,
+    default=128,
+    metavar="N",
+    help="input batch size for testing (default: 128)",
+)
+parser.add_argument("--epsilon", default=0.031, help="perturbation")
 args = parser.parse_args()
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def run_eval(model, dataset, device, test_loader, filename, model_type):
     """
-        Main function to run evaluation on a given model.
+    Main function to run evaluation on a given model.
 
-        :param model: trained image classifier to be tested
-        :param dataset: dataset the model is trained on
-        :param device: current device
-        :param test_loader: data loader containing test set for evaluation
-        :param filename: name of file to print results to
-        :param model_type: base model of the trained classifier
+    :param model: trained image classifier to be tested
+    :param dataset: dataset the model is trained on
+    :param device: current device
+    :param test_loader: data loader containing test set for evaluation
+    :param filename: name of file to print results to
+    :param model_type: base model of the trained classifier
     """
 
     # Open an output file and put the model in eval mode
@@ -56,44 +93,76 @@ def run_eval(model, dataset, device, test_loader, filename, model_type):
         data, target = Variable(data, requires_grad=True), Variable(target)
 
         # Calculate the natural and robust error for each attack
-        cw_err_natural, cw_err_robust = cw_whitebox_eval(model, dataset, data, target, device)
-        mim_err_natural, mim_err_robust = mim_whitebox_eval(model, data, target, device)
-        fgsm_err_natural, fgsm_err_robust = fgsm_whitebox_eval(model, data, target)
+        cw_err_natural, cw_err_robust = cw_whitebox_eval(
+            model, dataset, data, target, device
+        )
+        mim_err_natural, mim_err_robust = mim_whitebox_eval(
+            model, data, target, device
+        )
+        fgsm_err_natural, fgsm_err_robust = fgsm_whitebox_eval(
+            model, data, target
+        )
 
         # Calculate the PGD examples and corresponding robust errors
-        #l2pgd7
-        attack_l2pgd7 = create_attack(model, criterion, 'l2-pgd', 0.03, 7, 0.01)
+        # l2pgd7
+        attack_l2pgd7 = create_attack(
+            model, criterion, "l2-pgd", 0.03, 7, 0.01
+        )
         x_l2pgd7, _ = attack_l2pgd7.perturb(data, target)
-        err_l2pgd7 = (model(x_l2pgd7).data.max(1)[1] != target.data).float().sum()
+        err_l2pgd7 = (
+            (model(x_l2pgd7).data.max(1)[1] != target.data).float().sum()
+        )
 
         # l2pgd20
-        attack_l2pgd20 = create_attack(model, criterion, 'l2-pgd', 0.03, 20, 0.01)
+        attack_l2pgd20 = create_attack(
+            model, criterion, "l2-pgd", 0.03, 20, 0.01
+        )
         x_l2pgd20, _ = attack_l2pgd20.perturb(data, target)
-        err_l2pgd20 = (model(x_l2pgd20).data.max(1)[1] != target.data).float().sum()
+        err_l2pgd20 = (
+            (model(x_l2pgd20).data.max(1)[1] != target.data).float().sum()
+        )
 
         # l2pgd40
-        attack_l2pgd40 = create_attack(model, criterion, 'l2-pgd', 0.03, 40, 0.01)
+        attack_l2pgd40 = create_attack(
+            model, criterion, "l2-pgd", 0.03, 40, 0.01
+        )
         x_l2pgd40, _ = attack_l2pgd40.perturb(data, target)
-        err_l2pgd40 = (model(x_l2pgd40).data.max(1)[1] != target.data).float().sum()
+        err_l2pgd40 = (
+            (model(x_l2pgd40).data.max(1)[1] != target.data).float().sum()
+        )
 
         # linfpgd7
-        attack_linfpgd7 = create_attack(model, criterion, 'linf-pgd', 0.03, 7, 0.01)
+        attack_linfpgd7 = create_attack(
+            model, criterion, "linf-pgd", 0.03, 7, 0.01
+        )
         x_linfpgd7, _ = attack_linfpgd7.perturb(data, target)
-        err_linfpgd7 = (model(x_linfpgd7).data.max(1)[1] != target.data).float().sum()
+        err_linfpgd7 = (
+            (model(x_linfpgd7).data.max(1)[1] != target.data).float().sum()
+        )
 
         # linfpgd20
-        attack_linfpgd20 = create_attack(model, criterion, 'linf-pgd', 0.03, 20, 0.01)
+        attack_linfpgd20 = create_attack(
+            model, criterion, "linf-pgd", 0.03, 20, 0.01
+        )
         x_linfpgd20, _ = attack_linfpgd20.perturb(data, target)
-        err_linfpgd20 = (model(x_linfpgd20).data.max(1)[1] != target.data).float().sum()
+        err_linfpgd20 = (
+            (model(x_linfpgd20).data.max(1)[1] != target.data).float().sum()
+        )
 
         # linfpgd40
-        attack_linfpgd40 = create_attack(model, criterion, 'linf-pgd', 0.03, 40, 0.01)
+        attack_linfpgd40 = create_attack(
+            model, criterion, "linf-pgd", 0.03, 40, 0.01
+        )
         x_linfpgd40, _ = attack_linfpgd40.perturb(data, target)
-        err_linfpgd40 = (model(x_linfpgd40).data.max(1)[1] != target.data).float().sum()
+        err_linfpgd40 = (
+            (model(x_linfpgd40).data.max(1)[1] != target.data).float().sum()
+        )
 
         # Calculate the AA examples and corresponding robust errors
         # aa
-        adversary_aa = AutoAttack(model, norm='Linf', eps=.031, version='standard', verbose=False)
+        adversary_aa = AutoAttack(
+            model, norm="Linf", eps=0.031, version="standard", verbose=False
+        )
         x_aa = adversary_aa.run_standard_evaluation(data, target)
         err_aa = (model(x_aa).data.max(1)[1] != target.data).float().sum()
 
@@ -175,38 +244,57 @@ def run_eval(model, dataset, device, test_loader, filename, model_type):
     # Add the AA losses to the total losses
     f.write("AutoAttack Accuracy: " + str(aa_acc) + "%\n")
 
-    f.close() # close the file
+    f.close()  # close the file
+
 
 def main_testing(dataset, base_model, filename, model_string):
     """
-        Main function that sets up the testing process.
+    Main function that sets up the testing process.
 
-        :param dataset: dataset the tested classifier was trained on
-        :param base_model: model the tested classifier was built on
-        :param filename: name of file to write results to
-        :param model_string: location of model to be tested
+    :param dataset: dataset the tested classifier was trained on
+    :param base_model: model the tested classifier was built on
+    :param filename: name of file to write results to
+    :param model_string: location of model to be tested
     """
 
     # Set up the dataset and base model
     train_loader, test_loader = load_data(dataset, args, kwargs)
-    if base_model == 'res18':
-        model = ResNet18(num_classes=100 if dataset == 'cifar100' else 10).to(device)
-    elif base_model == 'res34':
-        model = ResNet34(num_classes=100 if dataset == 'cifar100' else 10).to(device)
-    elif base_model == 'res50':
-        model = ResNet50(num_classes=100 if dataset == 'cifar100' else 10).to(device)
-    elif base_model == 'res101':
-        model = ResNet101(num_classes=100 if dataset == 'cifar100' else 10).to(device)
-    elif base_model == 'res152':
-        model = ResNet152(num_classes=100 if dataset == 'cifar100' else 10).to(device)
-    elif base_model == 'wideres28':
-        model = WideResNet(depth=28, num_classes=100 if dataset == 'cifar100' else 10).to(device)
-    elif base_model == 'wideres32':
-        model = WideResNet(depth=32, num_classes=100 if dataset == 'cifar100' else 10).to(device)
-    elif base_model == 'wideres34':
-        model = WideResNet(depth=34, num_classes=100 if dataset == 'cifar100' else 10).to(device)
-    elif base_model == 'wideres34swa':
-        model_base = WideResNet(depth=34, num_classes=100 if dataset == 'cifar100' else 10).to(device)
+    if base_model == "res18":
+        model = ResNet18(num_classes=100 if dataset == "cifar100" else 10).to(
+            device
+        )
+    elif base_model == "res34":
+        model = ResNet34(num_classes=100 if dataset == "cifar100" else 10).to(
+            device
+        )
+    elif base_model == "res50":
+        model = ResNet50(num_classes=100 if dataset == "cifar100" else 10).to(
+            device
+        )
+    elif base_model == "res101":
+        model = ResNet101(num_classes=100 if dataset == "cifar100" else 10).to(
+            device
+        )
+    elif base_model == "res152":
+        model = ResNet152(num_classes=100 if dataset == "cifar100" else 10).to(
+            device
+        )
+    elif base_model == "wideres28":
+        model = WideResNet(
+            depth=28, num_classes=100 if dataset == "cifar100" else 10
+        ).to(device)
+    elif base_model == "wideres32":
+        model = WideResNet(
+            depth=32, num_classes=100 if dataset == "cifar100" else 10
+        ).to(device)
+    elif base_model == "wideres34":
+        model = WideResNet(
+            depth=34, num_classes=100 if dataset == "cifar100" else 10
+        ).to(device)
+    elif base_model == "wideres34swa":
+        model_base = WideResNet(
+            depth=34, num_classes=100 if dataset == "cifar100" else 10
+        ).to(device)
         model = AveragedModel(model_base).to(device)
     else:
         raise NotImplementedError
@@ -220,6 +308,9 @@ def main_testing(dataset, base_model, filename, model_string):
 
 
 if __name__ == "__main__":
-    main_testing('cifar10', 'wideres34swa',
-                 'tests/adt-va-cifar10-every9-epoch82-full-results.txt',
-                 'saved-models/adt-va-every9/swa-model-adt-va-cifar10-wideres34-epoch82.pt')
+    main_testing(
+        "cifar10",
+        "wideres34swa",
+        "tests/adt-va-cifar10-every9-epoch82-full-results.txt",
+        "saved-models/adt-va-every9/swa-model-adt-va-cifar10-wideres34-epoch82.pt",
+    )
