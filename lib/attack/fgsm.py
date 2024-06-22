@@ -1,11 +1,9 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-import torch
 import torch.nn as nn
 
 from .base import Attack, LabelMixin
-from ..util import batch_multiply
-from ..util import clamp
+from ..util import batch_multiply, clamp, normalize_by_pnorm
 
 
 class FGSMAttack(Attack, LabelMixin):

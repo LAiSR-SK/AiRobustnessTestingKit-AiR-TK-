@@ -1,15 +1,18 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 from __future__ import print_function
+
+import os
 import time
 
-from losses import *
-from helper_functions import *
-from models.resnet import *
-from models.wideresnet import *
-from helper_functions import args
+import torch
+from torch import optim
 
-# Define settings
+from lib.loss import standard_loss
+from lib.util import get_model
+
+from helper_functions import adjust_learning_rate, args, eval_clean, robust_eval, load_data
+
 model_dir = args.model_dir
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)
@@ -69,7 +72,7 @@ def main_warmup(ds_name, mod_name, epochs):
     """
 
     # Create file to print training progress
-    filename = 'clean-{}-{}-output.txt'.format(ds_name, mod_name)
+    filename = 'log/clean-{}-{}-output.txt'.format(ds_name, mod_name)
     f = open(filename, "a")
 
     # Initialize the model based on the specified architecture

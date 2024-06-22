@@ -1,11 +1,20 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-from train import *
-from autoattack import AutoAttack
-from helper_functions import *
+import argparse
+import copy
 
+import torch
+from torch import nn
+from torch.autograd import Variable
 from torch.optim.swa_utils import AveragedModel
 
+from autoattack import AutoAttack
+
+from lib.attack import create_attack
+from lib.model import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152, WideResNet
+from helper_functions import cw_whitebox_eval, fgsm_whitebox_eval, mim_whitebox_eval, load_data
+
+kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {}
 parser = argparse.ArgumentParser(description='Framework for Adversarial Testing')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
                     help='input batch size for training (default: 128)')
@@ -14,6 +23,8 @@ parser.add_argument('--test-batch-size', type=int, default=128, metavar='N',
 parser.add_argument('--epsilon', default=0.031,
                     help='perturbation')
 args = parser.parse_args()
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def run_eval(model, dataset, device, test_loader, filename, model_type):
     """

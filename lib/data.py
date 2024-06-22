@@ -2,19 +2,17 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 # This is a modified version of https://github.com/pytorch/vision/blob/master/torchvision/datasets/cifar.py
 from __future__ import print_function
-from PIL import Image
 import os
 import os.path
-import numpy as np
+import pickle
 import sys
-if sys.version_info[0] == 2:
-    import cPickle as pickle
-else:
-    import pickle
+
+import numpy as np
 
 import torch.utils.data as data
 from torchvision.datasets.utils import download_url, check_integrity
 
+from PIL import Image
 
 class CIFAR10(data.Dataset):
     """`CIFAR10 <https://www.cs.toronto.edu/~kriz/cifar.html>`_ Dataset.

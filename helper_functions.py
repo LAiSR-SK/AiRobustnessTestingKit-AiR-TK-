@@ -4,6 +4,8 @@ from __future__ import print_function
 import argparse
 import ssl
 
+import numpy as np
+
 import torchvision
 from torchvision import transforms
 
@@ -12,7 +14,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 import torch.optim as optim
 
-from lib.data import CIFAR10, CIFAR100
+from lib.data import CIFAR100
 from lib.model import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152, WideResNet
 
 parser = argparse.ArgumentParser(description='PyTorch VA Adversarial Training')
@@ -246,24 +248,24 @@ def load_data(ds_name, args, kwargs, coarse=False):
     ])
     ssl._create_default_https_context = ssl._create_unverified_context # set the context for working with tensors
 
-    if ds_name == 'cifar10':
+    if ds_name == 'cifar10':  # TODO(Ezuharad): These hardcoded paths should be enumerated in a config
         # Load in the CIFAR10 dataloaders
-        trainset = torchvision.datasets.CIFAR10(root='../data', train=True, download=True, transform=transform_train)
+        trainset = torchvision.datasets.CIFAR10(root='../data/download', train=True, download=True, transform=transform_train)
         train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, **kwargs)
-        testset = torchvision.datasets.CIFAR10(root='../data', train=False, download=True, transform=transform_test)
+        testset = torchvision.datasets.CIFAR10(root='../data/download', train=False, download=True, transform=transform_test)
         test_loader = torch.utils.data.DataLoader(testset, batch_size=args.test_batch_size, shuffle=False, **kwargs)
     elif ds_name == 'cifar100':
         # Load in the CIFAR100 dataloaders
-        if coarse==True:
-            trainset = CIFAR100(root='../data', train=True, download=True, transform=transform_train, coarse=True)
+        if coarse:
+            trainset = CIFAR100(root='../data/download', train=True, download=True, transform=transform_train, coarse=True)
             train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, **kwargs)
-            testset = CIFAR100(root='../data', train=False, download=True, transform=transform_test,  coarse=True)
+            testset = CIFAR100(root='../data/download', train=False, download=True, transform=transform_test,  coarse=True)
             test_loader = torch.utils.data.DataLoader(testset, batch_size=args.test_batch_size, shuffle=False, **kwargs)
         else:
-            trainset = torchvision.datasets.CIFAR100(root='../data', train=True, download=True,
+            trainset = torchvision.datasets.CIFAR100(root='../data/download', train=True, download=True,
                                                      transform=transform_train)
             train_loader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, **kwargs)
-            testset = torchvision.datasets.CIFAR100(root='../data', train=False, download=True,
+            testset = torchvision.datasets.CIFAR100(root='../data/download', train=False, download=True,
                                                     transform=transform_test)
             test_loader = torch.utils.data.DataLoader(testset, batch_size=args.test_batch_size, shuffle=False, **kwargs)
     else:
@@ -742,7 +744,7 @@ def mim_whitebox(model,
 
 def get_model(mod_name, ds_name, device):
     if mod_name == 'res18':
-        model = ResNet18(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
+        model = ResNet18(num_classes=100 if ds_name == 'cifar100' else 10).to(device)  # TODO(Ezuharad): this style of hardcoding is not good, we should use a class attribute
     elif mod_name == 'res34':
         model = ResNet34(num_classes=100 if ds_name == 'cifar100' else 10).to(device)
     elif mod_name == 'res50':

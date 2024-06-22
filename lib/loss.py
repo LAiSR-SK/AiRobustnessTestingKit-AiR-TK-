@@ -5,7 +5,9 @@ from __future__ import print_function
 from autoattack import AutoAttack
 
 import torch
-import torch.nn as nn
+import torch.nn.functional as F
+from torch import nn, optim
+from torch.autograd import Variable
 
 from .attack import create_attack
 
@@ -70,7 +72,7 @@ def va_get_xadv(model, x, y, att, device, ds):
     if att == 'linf-pgd-40':
         attack = create_attack(model, criterion, 'linf-pgd', 0.03, 40, 0.01)
         x_adv, _ = attack.perturb(x, y)
-    elif att == 'cw':
+    elif att == 'cw': # TODO(Ezuharad): These should be moved here
         x_adv = cw_whitebox(model, x, y, device, ds)
     elif att == 'mim':
         x_adv = mim_whitebox(model, x, y, device)
@@ -134,7 +136,6 @@ def adt_loss(model,
         :return cross-entropy loss between adversarial example drawn from distribution and correct labels
     """
     model.eval() # put the model in evaluation mode
-    batch_size = len(x_natural)
 
     # set the mean to a set of zeros the same size as the unperturbed image
     mean = Variable(torch.zeros(x_natural.size()).cuda(), requires_grad=True)

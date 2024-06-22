@@ -2,14 +2,22 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 from __future__ import print_function
 
+import argparse
+import copy
+import os
+import time
+
+import torch
+from torch import optim
 from torch.optim.swa_utils import AveragedModel, SWALR
 from torch.optim.lr_scheduler import CosineAnnealingLR
 
-from lib.loss import *
-from warmup_round import *
+from lib.loss import adt_va_loss
+from lib.util import get_model
 
-import time
-import copy
+from helper_functions import adjust_learning_rate, class_define_attacks, eval_clean, load_data, robust_eval
+from warmup_round import main_warmup
+
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR TRADES Adversarial Training')
 parser.add_argument('--batch-size', type=int, default=128, metavar='N',
@@ -165,10 +173,6 @@ def main_va_epochs(ds_name, mod_name, clean_epochs=0):
 
         # Define the dictionary of attack types
         attacks = class_define_attacks(ds_name)
-
-        # Calculate the time elapsed
-        curr_time = time.time()
-        time_elapsed = curr_time - start_tot
 
         # Commence training, timing the method and recording the time
         start = time.time() # start recording training time

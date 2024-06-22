@@ -1,10 +1,9 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-from .base import Attack
 
 from .apgd import LinfAPGDAttack, L2APGDAttack
-from .fgsm import FGMAttack, FGSMAttack, L2FastGradientAttack, LinfFastGradientAttack
-from .pgd import PGDAttack, L2PGDAttack, LinfPGDAttack
+from .fgsm import FGMAttack, FGSMAttack
+from .pgd import L2PGDAttack, LinfPGDAttack
 
 
 def create_attack(model, criterion, attack_type, attack_eps, attack_iter, attack_step, rand_init_type='uniform', 
