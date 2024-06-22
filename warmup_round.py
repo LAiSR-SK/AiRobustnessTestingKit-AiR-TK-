@@ -1,12 +1,12 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 from __future__ import print_function
-import os
 import time
 
-from lib.loss import *
+from losses import *
 from helper_functions import *
-from lib.model import *
+from models.resnet import *
+from models.wideresnet import *
 from helper_functions import args
 
 # Define settings
@@ -69,7 +69,7 @@ def main_warmup(ds_name, mod_name, epochs):
     """
 
     # Create file to print training progress
-    filename = 'log/clean-{}-{}-output.txt'.format(ds_name, mod_name)
+    filename = 'clean-{}-{}-output.txt'.format(ds_name, mod_name)
     f = open(filename, "a")
 
     # Initialize the model based on the specified architecture
@@ -80,7 +80,7 @@ def main_warmup(ds_name, mod_name, epochs):
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
 
     # Set up the dataloaders
-    train_loader, test_loader = load_data(ds_name, args, kwargs)
+    train_loader, test_loader = load_data(ds_name, args, kwargs, coarse=True)
 
     # Begin model training for the specified number of epochs
     for epoch in range(1, epochs + 1):
@@ -119,4 +119,5 @@ def main_warmup(ds_name, mod_name, epochs):
 
 
 if __name__ == '__main__':
-    main_warmup('cifar100', 'wideres34', 25)
+    main_warmup('cifar100', 'wideres34', 1)
+    main_warmup('cifar10', 'wideres34', 1)
