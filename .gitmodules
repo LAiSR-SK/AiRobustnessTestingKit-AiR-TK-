@@ -1,0 +1,3 @@
+[submodule "submodules/MAIR"]
+	path = submodules/MAIR
+	url = https://github.com/Harry24k/MAIR
