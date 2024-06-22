@@ -3,6 +3,7 @@ __pycache__
 
 # data files
 data/download/*
+!data/download/.gitkeep
 data/model/*.pt
 
 # log files
