@@ -1,3 +1,7 @@
 [tool.ruff]
 exclude = [".conda", "submodules"]
 line-length = 79
+
+[tool.ruff.lint]
+select = ["I"]
+ignore = ["F401"]

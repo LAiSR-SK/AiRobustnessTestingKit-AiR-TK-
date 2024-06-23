@@ -8,13 +8,8 @@ import os
 import time
 
 import torch
-from torch import optim
-from torch.optim.swa_utils import AveragedModel, SWALR
-from torch.optim.lr_scheduler import CosineAnnealingLR
-
 from adversarial_training_toolkit.loss import adt_va_loss
 from adversarial_training_toolkit.util import get_model
-
 from helper_functions import (
     adjust_learning_rate,
     class_define_attacks,
@@ -22,8 +17,10 @@ from helper_functions import (
     load_data,
     robust_eval,
 )
+from torch import optim
+from torch.optim.lr_scheduler import CosineAnnealingLR
+from torch.optim.swa_utils import SWALR, AveragedModel
 from warmup_round import main_warmup
-
 
 parser = argparse.ArgumentParser(
     description="PyTorch CIFAR TRADES Adversarial Training"

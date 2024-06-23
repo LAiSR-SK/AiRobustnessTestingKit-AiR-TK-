@@ -1,7 +1,10 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 
-from adversarial_training_toolkit.attack.apgd import LinfAPGDAttack, L2APGDAttack
+from adversarial_training_toolkit.attack.apgd import (
+    L2APGDAttack,
+    LinfAPGDAttack,
+)
 from adversarial_training_toolkit.attack.fgsm import FGMAttack, FGSMAttack
 from adversarial_training_toolkit.attack.pgd import L2PGDAttack, LinfPGDAttack
 

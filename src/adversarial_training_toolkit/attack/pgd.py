@@ -4,15 +4,17 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from .base import Attack, LabelMixin
+from adversarial_training_toolkit.util import (
+    batch_clamp,
+    batch_multiply,
+    clamp,
+    clamp_by_pnorm,
+    is_float_or_torch_tensor,
+    normalize_by_pnorm,
+    rand_init_delta,
+)
 
-from adversarial_training_toolkit.util import batch_clamp
-from adversarial_training_toolkit.util import batch_multiply
-from adversarial_training_toolkit.util import clamp
-from adversarial_training_toolkit.util import clamp_by_pnorm
-from adversarial_training_toolkit.util import is_float_or_torch_tensor
-from adversarial_training_toolkit.util import normalize_by_pnorm
-from adversarial_training_toolkit.util import rand_init_delta
+from .base import Attack, LabelMixin
 
 
 def perturb_iterative(

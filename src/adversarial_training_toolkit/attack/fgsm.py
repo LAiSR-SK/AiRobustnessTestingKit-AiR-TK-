@@ -3,7 +3,11 @@
 import torch.nn as nn
 
 from adversarial_training_toolkit.attack.base import Attack, LabelMixin
-from adversarial_training_toolkit.util import batch_multiply, clamp, normalize_by_pnorm
+from adversarial_training_toolkit.util import (
+    batch_multiply,
+    clamp,
+    normalize_by_pnorm,
+)
 
 
 class FGSMAttack(Attack, LabelMixin):

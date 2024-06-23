@@ -4,12 +4,6 @@ import argparse
 import copy
 
 import torch
-from torch import nn
-from torch.autograd import Variable
-from torch.optim.swa_utils import AveragedModel
-
-from autoattack import AutoAttack
-
 from adversarial_training_toolkit.attack import create_attack
 from adversarial_training_toolkit.model import (
     ResNet18,
@@ -19,12 +13,16 @@ from adversarial_training_toolkit.model import (
     ResNet152,
     WideResNet,
 )
+from autoattack import AutoAttack
 from helper_functions import (
     cw_whitebox_eval,
     fgsm_whitebox_eval,
-    mim_whitebox_eval,
     load_data,
+    mim_whitebox_eval,
 )
+from torch import nn
+from torch.autograd import Variable
+from torch.optim.swa_utils import AveragedModel
 
 kwargs = (
     {"num_workers": 1, "pin_memory": True} if torch.cuda.is_available() else {}

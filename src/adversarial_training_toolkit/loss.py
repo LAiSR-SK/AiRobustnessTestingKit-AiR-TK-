@@ -2,10 +2,9 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 from __future__ import print_function
 
-from autoattack import AutoAttack
-
 import torch
 import torch.nn.functional as F
+from autoattack import AutoAttack
 from torch import nn, optim
 from torch.autograd import Variable
 

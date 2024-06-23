@@ -6,18 +6,16 @@ import os
 import time
 
 import torch
-from torch import optim
-
 from adversarial_training_toolkit.loss import standard_loss
 from adversarial_training_toolkit.util import get_model
-
 from helper_functions import (
     adjust_learning_rate,
     args,
     eval_clean,
-    robust_eval,
     load_data,
+    robust_eval,
 )
+from torch import optim
 
 model_dir = args.model_dir
 if not os.path.exists(model_dir):

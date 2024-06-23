@@ -1,19 +1,15 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 from __future__ import print_function
+
 import argparse
 import ssl
 
 import numpy as np
-
-import torchvision
-from torchvision import transforms
-
 import torch
 import torch.nn as nn
-from torch.autograd import Variable
 import torch.optim as optim
-
+import torchvision
 from adversarial_training_toolkit.data import CIFAR100
 from adversarial_training_toolkit.model import (
     ResNet18,
@@ -23,6 +19,8 @@ from adversarial_training_toolkit.model import (
     ResNet152,
     WideResNet,
 )
+from torch.autograd import Variable
+from torchvision import transforms
 
 parser = argparse.ArgumentParser(description="PyTorch VA Adversarial Training")
 parser.add_argument("--dataset", type=str, default="cifar100", help="dataset")

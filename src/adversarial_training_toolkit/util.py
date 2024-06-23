@@ -1,11 +1,8 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 import numpy as np
-
 import torch
-
-from torch.distributions import laplace
-from torch.distributions import uniform
+from torch.distributions import laplace, uniform
 
 from adversarial_training_toolkit.model import (
     ResNet18,
