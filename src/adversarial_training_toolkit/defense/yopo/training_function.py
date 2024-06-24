@@ -6,7 +6,7 @@ from adversarial_training_toolkit.defense.yopo.utils_misc import torch_accuracy
 from tqdm import tqdm
 
 
-class FastGradientLayerOneTrainer(object):
+class FastGradientLayerOneTrainer:
     def __init__(
         self,
         Hamiltonian_func,
@@ -133,9 +133,9 @@ def train_one_epoch(
         LayerOneTrainner.param_optimizer.step()
         optimizer.zero_grad()
         LayerOneTrainner.param_optimizer.zero_grad()
-        pbar_dic["Acc"] = "{:.2f}".format(cleanacc)
-        pbar_dic["loss"] = "{:.2f}".format(cleanloss)
-        pbar_dic["YofoAcc"] = "{:.2f}".format(yofoacc)
+        pbar_dic["Acc"] = f"{cleanacc:.2f}"
+        pbar_dic["loss"] = f"{cleanloss:.2f}"
+        pbar_dic["YofoAcc"] = f"{yofoacc:.2f}"
         pbar.set_postfix(pbar_dic)
 
     return cleanacc, yofoacc

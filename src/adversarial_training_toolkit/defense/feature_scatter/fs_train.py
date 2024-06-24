@@ -2,8 +2,6 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 """Train Adversarially Robust Models with Feature Scattering"""
 
-from __future__ import print_function
-
 import argparse
 import os
 
@@ -190,7 +188,7 @@ def train_fun(epoch, net, trainloader, optimizer):
         torch.save(state, f_path)
         torch.save(
             net.state_dict(),
-            "data/model/feature-attack-epoch{}.pt".format(epoch),
+            f"data/model/feature-attack-epoch{epoch}.pt",
         )
         print("Epoch " + str(epoch) + " saved")
 

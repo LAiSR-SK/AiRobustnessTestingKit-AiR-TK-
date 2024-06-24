@@ -355,10 +355,11 @@ def main():
 
     criterion = nn.CrossEntropyLoss()
 
-    if args.attack == "free":
-        delta = torch.zeros(args.batch_size, 3, 32, 32).cuda()
-        delta.requires_grad = True
-    elif args.attack == "fgsm" and args.fgsm_init == "previous":
+    if (
+        args.attack == "free"
+        or args.attack == "fgsm"
+        and args.fgsm_init == "previous"
+    ):
         delta = torch.zeros(args.batch_size, 3, 32, 32).cuda()
         delta.requires_grad = True
 

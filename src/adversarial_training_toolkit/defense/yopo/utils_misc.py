@@ -31,7 +31,7 @@ def torch_accuracy(output, target, topk=(1,)) -> List[torch.Tensor]:
     return ans
 
 
-class AvgMeter(object):
+class AvgMeter:
     """
     Computing mean
     """
@@ -74,7 +74,7 @@ def save_args(args, save_dir=None):
 
 def mkdir(path):
     if not os.path.exists(path):
-        print("creating dir {}".format(path))
+        print(f"creating dir {path}")
         os.mkdir(path)
 
 
@@ -86,7 +86,7 @@ def save_checkpoint(now_epoch, net, optimizer, lr_scheduler, file_name):
         "lr_scheduler_state_dict": lr_scheduler.state_dict(),
     }
     if os.path.exists(file_name):
-        print("Overwriting {}".format(file_name))
+        print(f"Overwriting {file_name}")
     torch.save(checkpoint, file_name)
     link_name = os.path.join(
         "/", *file_name.split(os.path.sep)[:-1], "last.checkpoint"
@@ -97,7 +97,7 @@ def save_checkpoint(now_epoch, net, optimizer, lr_scheduler, file_name):
 
 def load_checkpoint(file_name, net=None, optimizer=None, lr_scheduler=None):
     if os.path.isfile(file_name):
-        print("=> loading checkpoint '{}'".format(file_name))
+        print(f"=> loading checkpoint '{file_name}'")
         check_point = torch.load(file_name)
         if net is not None:
             print("Loading network state dict")
@@ -113,7 +113,7 @@ def load_checkpoint(file_name, net=None, optimizer=None, lr_scheduler=None):
 
         return check_point["epoch"]
     else:
-        print("=> no checkpoint found at '{}'".format(file_name))
+        print(f"=> no checkpoint found at '{file_name}'")
 
 
 def make_symlink(source, link_name):
@@ -133,5 +133,5 @@ def make_symlink(source, link_name):
 
 def add_path(path):
     if path not in sys.path:
-        print("Adding {}".format(path))
+        print(f"Adding {path}")
         sys.path.append(path)

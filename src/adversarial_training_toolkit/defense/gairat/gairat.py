@@ -293,7 +293,7 @@ def main_gairat(ds_name, mod_name="wideres34"):
             widen_factor=width_factor,
             dropRate=drop_rate,
         ).cuda()
-        net = "WRN{}-{}-dropout{}".format(depth, width_factor, drop_rate)
+        net = f"WRN{depth}-{width_factor}-dropout{drop_rate}"
 
     # model = torch.nn.DataParallel(model)
     optimizer = optim.SGD(
@@ -540,9 +540,7 @@ def main_gairat(ds_name, mod_name="wideres34"):
     model_dir = "../data/model"
     torch.save(
         model.state_dict(),
-        os.path.join(
-            model_dir, "model-gairat-{}-{}.pt".format(ds_name, mod_name)
-        ),
+        os.path.join(model_dir, f"model-gairat-{ds_name}-{mod_name}.pt"),
     )
 
 

@@ -22,7 +22,6 @@ _cached_alexnet: Optional[AlexNetFeatureModel] = None
 _cached_alexnet_cifar: Optional[AlexNetFeatureModel] = None
 
 
-
 def get_lpips_model(
     lpips_model_spec: Union[
         Literal["self", "resnet"],

@@ -1,6 +1,5 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-from __future__ import print_function
 
 import argparse
 import copy
@@ -9,8 +8,20 @@ import time
 
 import torch
 from adversarial_training_toolkit.loss import clean_loss
-from adversarial_training_toolkit.model import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152, WideResNet
-from helper_functions import adjust_learning_rate, load_data, eval_clean, robust_eval
+from adversarial_training_toolkit.model import (
+    ResNet18,
+    ResNet34,
+    ResNet50,
+    ResNet101,
+    ResNet152,
+    WideResNet,
+)
+from helper_functions import (
+    adjust_learning_rate,
+    eval_clean,
+    load_data,
+    robust_eval,
+)
 from torch import optim
 
 parser = argparse.ArgumentParser(
@@ -124,22 +135,10 @@ def train(args, model, device, train_loader, optimizer, ds_name, epoch, f):
         # print progress
         if batch_idx % args.log_interval == 0:
             print(
-                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                    epoch,
-                    batch_idx * len(data),
-                    len(train_loader.dataset),
-                    100.0 * batch_idx / len(train_loader),
-                    loss.item(),
-                )
+                f"Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100.0 * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}"
             )
             f.write(
-                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                    epoch,
-                    batch_idx * len(data),
-                    len(train_loader.dataset),
-                    100.0 * batch_idx / len(train_loader),
-                    loss.item(),
-                )
+                f"Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100.0 * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}"
             )
 
 
@@ -154,7 +153,7 @@ def main_clean(ds_name, mod_name="wideres34"):
     """
 
     # Set up file for printing the output
-    filename = "log/clean-{}-{}-output.txt".format(ds_name, mod_name)
+    filename = f"log/clean-{ds_name}-{mod_name}-output.txt"
     f = open(filename, "a")
 
     # Initialize the desired model
@@ -200,15 +199,11 @@ def main_clean(ds_name, mod_name="wideres34"):
     # Save the model and optimizer
     torch.save(
         model.state_dict(),
-        os.path.join(
-            model_dir, "model-clean-{}-{}-start.pt".format(ds_name, mod_name)
-        ),
+        os.path.join(model_dir, f"model-clean-{ds_name}-{mod_name}-start.pt"),
     )
     torch.save(
         optimizer.state_dict(),
-        os.path.join(
-            model_dir, "opt-clean-{}-{}-start.tar".format(ds_name, mod_name)
-        ),
+        os.path.join(model_dir, f"opt-clean-{ds_name}-{mod_name}-start.tar"),
     )
 
     # Begin training for the designated number of epochs
@@ -242,18 +237,14 @@ def main_clean(ds_name, mod_name="wideres34"):
                 model.state_dict(),
                 os.path.join(
                     model_dir,
-                    "model-clean-{}-{}-epoch{}.pt".format(
-                        ds_name, mod_name, epoch
-                    ),
+                    f"model-clean-{ds_name}-{mod_name}-epoch{epoch}.pt",
                 ),
             )
             torch.save(
                 optimizer.state_dict(),
                 os.path.join(
                     model_dir,
-                    "opt-clean-{}-{}-epoch{}.tar".format(
-                        ds_name, mod_name, epoch
-                    ),
+                    f"opt-clean-{ds_name}-{mod_name}-epoch{epoch}.tar",
                 ),
             )
 
@@ -293,9 +284,7 @@ def main_clean(ds_name, mod_name="wideres34"):
 
     trained_model.load_state_dict(
         torch.load(
-            "data/model/model-clean-{}-{}-epoch{}.pt".format(
-                ds_name, mod_name, args.epochs
-            )
+            f"data/model/model-clean-{ds_name}-{mod_name}-epoch{args.epochs}.pt"
         )
     )
     model_copy = copy.deepcopy(trained_model)

@@ -37,7 +37,7 @@ def get_mean_and_std(dataset):
     return mean, std
 
 
-class RunningMeanStd(object):
+class RunningMeanStd:
     def __init__(self, dim=1):
         self._mean = np.zeros(dim)
         self._count = 0
@@ -125,7 +125,7 @@ def mkdir_p(path):
             raise
 
 
-class AverageMeter(object):
+class AverageMeter:
     """Computes and stores the average and current value
     Imported from https://github.com/pytorch/examples/blob/master/imagenet/main.py#L247-L262
     """

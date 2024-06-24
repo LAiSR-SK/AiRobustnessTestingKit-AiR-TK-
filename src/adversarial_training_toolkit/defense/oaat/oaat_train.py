@@ -2,8 +2,6 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 """The code is adapted from https://github.com/csdongxian/AWP/tree/main/trades_AWP and https://github.com/cassidylaidlaw/perceptual-advex"""
 
-from __future__ import print_function
-
 import argparse
 import os
 import time
@@ -488,7 +486,7 @@ def train(
         var_step_size = vareps / 4.0
         var_pert_steps = 10
 
-    print("epoch: {}".format(epoch))
+    print(f"epoch: {epoch}")
     # bar = Bar('Processing', max=len(train_loader))
 
     for batch_idx, (data, data_auto, data_test, target, index) in enumerate(
@@ -608,7 +606,7 @@ def train_lpips_alt(
     end = time.time()
     var_step_size = vareps / 4.0
 
-    print("epoch: {}".format(epoch))
+    print(f"epoch: {epoch}")
     # bar = Bar('Processing', max=len(train_loader))
 
     for batch_idx, (data, data_auto, data_test, target, index) in enumerate(
@@ -942,7 +940,7 @@ def main_oaat(ds_name):
     test_loader = torch.utils.data.DataLoader(
         testset, batch_size=args.test_batch_size, shuffle=False, **kwargs
     )
-    print("{} dataloader: Done".format(ds_name))
+    print(f"{ds_name} dataloader: Done")
 
     model = nn.DataParallel(ResNet18(num_classes=num_classes)).to(device)
     optimizer = optim.SGD(
@@ -1000,19 +998,7 @@ def main_oaat(ds_name):
                 torch.load(
                     str(args.model_dir)
                     + "/"
-                    + "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.pkl".format(
-                        args.exp_name,
-                        start_ept,
-                        tau,
-                        ds_name,
-                        args.lpips_weight,
-                        args.mixup_alpha,
-                        args.auto,
-                        1,
-                        args.beta_final,
-                        args.weight_decay,
-                        args.start_epoch - 1,
-                    )
+                    + f"{args.exp_name}_{start_ept}_{tau}_{ds_name}_{args.lpips_weight}_{args.mixup_alpha}_{args.auto}_{1}_{args.beta_final}_{args.weight_decay}_{args.start_epoch - 1}.pkl"
                 )
             )
         exp_avgs.append(model_tau.state_dict())
@@ -1058,38 +1044,14 @@ def main_oaat(ds_name):
                     args.arch,
                     load_state_dict=str(args.model_dir)
                     + "/"
-                    + "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.pkl".format(
-                        args.exp_name,
-                        1,
-                        0.995,
-                        ds_name,
-                        args.lpips_weight,
-                        args.mixup_alpha,
-                        args.auto,
-                        start_epoch,
-                        args.beta_final,
-                        args.weight_decay,
-                        epoch - 1,
-                    ),
+                    + f"{args.exp_name}_{1}_{0.995}_{ds_name}_{args.lpips_weight}_{args.mixup_alpha}_{args.auto}_{start_epoch}_{args.beta_final}_{args.weight_decay}_{epoch - 1}.pkl",
                 )
             else:
                 lpips_model = get_lpips_model(
                     args.arch,
                     load_state_dict=str(args.model_dir)
                     + "/"
-                    + "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.pkl".format(
-                        args.exp_name,
-                        1,
-                        0.995,
-                        ds_name,
-                        args.lpips_weight,
-                        args.mixup_alpha,
-                        args.auto,
-                        start_epoch,
-                        args.beta_final,
-                        args.weight_decay,
-                        epoch - 1,
-                    ),
+                    + f"{args.exp_name}_{1}_{0.995}_{ds_name}_{args.lpips_weight}_{args.mixup_alpha}_{args.auto}_{start_epoch}_{args.beta_final}_{args.weight_decay}_{epoch - 1}.pkl",
                 )
             alpha = alpha - args.mixup_alpha / (
                 args.epochs - int(3 * args.epochs / 4) + 1
@@ -1157,34 +1119,14 @@ def main_oaat(ds_name):
                 model.state_dict(),
                 os.path.join(
                     model_dir,
-                    "{}_{}_{}_{}_{}_{}_{}_{}_{}.pkl".format(
-                        args.exp_name,
-                        ds_name,
-                        args.lpips_weight,
-                        args.mixup_alpha,
-                        args.auto,
-                        args.start_epoch,
-                        args.beta_final,
-                        args.weight_decay,
-                        epoch,
-                    ),
+                    f"{args.exp_name}_{ds_name}_{args.lpips_weight}_{args.mixup_alpha}_{args.auto}_{args.start_epoch}_{args.beta_final}_{args.weight_decay}_{epoch}.pkl",
                 ),
             )
             torch.save(
                 optimizer.state_dict(),
                 os.path.join(
                     model_dir,
-                    "{}_{}_{}_{}_{}_{}_{}_{}_{}.tar".format(
-                        args.exp_name,
-                        ds_name,
-                        args.lpips_weight,
-                        args.mixup_alpha,
-                        args.auto,
-                        args.start_epoch,
-                        args.beta_final,
-                        args.weight_decay,
-                        epoch,
-                    ),
+                    f"{args.exp_name}_{ds_name}_{args.lpips_weight}_{args.mixup_alpha}_{args.auto}_{args.start_epoch}_{args.beta_final}_{args.weight_decay}_{epoch}.tar",
                 ),
             )
 
@@ -1197,19 +1139,7 @@ def main_oaat(ds_name):
                         new_state_dict,
                         str(args.model_dir)
                         + "/"
-                        + "{}_{}_{}_{}_{}_{}_{}_{}_{}_{}_{}.pkl".format(
-                            args.exp_name,
-                            start_ep,
-                            tau,
-                            ds_name,
-                            args.lpips_weight,
-                            args.mixup_alpha,
-                            args.auto,
-                            args.start_epoch,
-                            args.beta_final,
-                            args.weight_decay,
-                            epoch,
-                        ),
+                        + f"{args.exp_name}_{start_ep}_{tau}_{ds_name}_{args.lpips_weight}_{args.mixup_alpha}_{args.auto}_{args.start_epoch}_{args.beta_final}_{args.weight_decay}_{epoch}.pkl",
                     )
 
 

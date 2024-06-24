@@ -8,7 +8,7 @@ import numpy as np
 from PIL import Image, ImageEnhance, ImageOps
 
 
-class ImageNetPolicy(object):
+class ImageNetPolicy:
     """Randomly choose one of the best 24 Sub-policies on ImageNet.
     Example:
     >>> policy = ImageNetPolicy()
@@ -57,7 +57,7 @@ class ImageNetPolicy(object):
         return "AutoAugment ImageNet Policy"
 
 
-class CIFAR10Policy(object):
+class CIFAR10Policy:
     """Randomly choose one of the best 25 Sub-policies on CIFAR10.
     Example:
     >>> policy = CIFAR10Policy()
@@ -106,7 +106,7 @@ class CIFAR10Policy(object):
         return "AutoAugment CIFAR10 Policy"
 
 
-class SVHNPolicy(object):
+class SVHNPolicy:
     """Randomly choose one of the best 25 Sub-policies on SVHN.
     Example:
     >>> policy = SVHNPolicy()
@@ -155,7 +155,7 @@ class SVHNPolicy(object):
         return "AutoAugment SVHN Policy"
 
 
-class SubPolicy(object):
+class SubPolicy:
     def __init__(
         self,
         p1,

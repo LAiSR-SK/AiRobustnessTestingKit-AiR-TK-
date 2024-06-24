@@ -1,14 +1,6 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-import pickle
-
 import torch
-from adversarial_training_toolkit.defense.feature_scatter.fs_utils import (
-    label_smoothing,
-    one_hot_tensor,
-    sinkhorn_loss_joint_IPOT,
-    softCrossEntropy,
-)
 from torch import nn
 from torch.autograd import Variable
 from torch.nn import functional as F
@@ -23,199 +15,113 @@ def zero_gradients(x):
         x.grad.zero_()
 
 
-class Attack_None(nn.Module):
-    def __init__(self, basic_net, config):
-        super(Attack_None, self).__init__()
-        self.train_flag = (
-            True if "train" not in config.keys() else config["train"]
-        )
-        self.basic_net = basic_net
-        print(config)
-
-    def forward(self, inputs, targets, attack=None, batch_idx=-1):
-        if self.train_flag:
-            self.basic_net.train()
-        else:
-            self.basic_net.eval()
-        outputs, _ = self.basic_net(inputs)
-        return outputs, None
+def sinkhorn_loss_joint_IPOT(
+    alpha, beta, x_feature, y_feature, x_label, y_label, epsilon, m, n
+):
+    C_fea = get_cost_matrix(x_feature, y_feature)
+    C = C_fea
+    T = sinkhorn(C, 0.01, 100)
+    # T = IPOT(C, 1)
+    cost_ot = torch.sum(T * C)
+    return cost_ot
 
 
-class Attack_PGD(nn.Module):
-    # Back-propogate
-    def __init__(self, basic_net, config, attack_net=None):
-        super(Attack_PGD, self).__init__()
-        self.basic_net = basic_net
-        self.attack_net = attack_net
-        self.rand = config["random_start"]
-        self.step_size = config["step_size"]
-        self.epsilon = config["epsilon"]
-        self.num_steps = config["num_steps"]
-        self.loss_func = (
-            torch.nn.CrossEntropyLoss(reduction="none")
-            if "loss_func" not in config.keys()
-            else config["loss_func"]
-        )
-        self.train_flag = (
-            True if "train" not in config.keys() else config["train"]
-        )
+def sinkhorn(C, epsilon, niter=50, device="cuda"):
+    m = C.size(0)
+    n = C.size(1)
+    mu = Variable(
+        1.0 / m * torch.FloatTensor(m).fill_(1).to("cuda"), requires_grad=False
+    )
+    nu = Variable(
+        1.0 / n * torch.FloatTensor(n).fill_(1).to("cuda"), requires_grad=False
+    )
 
-        self.box_type = (
-            "white" if "box_type" not in config.keys() else config["box_type"]
-        )
+    # Parameters of the Sinkhorn algorithm.
+    tau = -0.8  # nesterov-like acceleration
+    thresh = 10 ** (-1)  # stopping criterion
 
-        print(config)
+    # Elementary operations .....................................................................
+    def ave(u, u1):
+        "Barycenter subroutine, used by kinetic acceleration through extrapolation."
+        return tau * u + (1 - tau) * u1
 
-    def forward(
-        self, inputs, targets, attack=True, targeted_label=-1, batch_idx=0
-    ):
-        if not attack:
-            outputs = self.basic_net(inputs)[0]
-            return outputs, None
+    def M(u, v):
+        "Modified cost for logarithmic updates"
+        "$M_{ij} = (-c_{ij} + u_i + v_j) / \epsilon$"
+        return (-C + u.unsqueeze(1) + v.unsqueeze(0)) / epsilon
 
-        if self.box_type == "white":
-            aux_net = pickle.loads(pickle.dumps(self.basic_net))
-        elif self.box_type == "black":
-            assert (
-                self.attack_net is not None
-            ), "should provide an additional net in black-box case"
-            aux_net = pickle.loads(pickle.dumps(self.basic_net))
-        aux_net.eval()
-        logits_pred_nat = aux_net(inputs)[0]
-        targets_prob = F.softmax(logits_pred_nat.float(), dim=1)
+    def lse(A):
+        "log-sum-exp"
+        return torch.log(
+            torch.exp(A).sum(1, keepdim=True) + 1e-6
+        )  # add 10^-6 to prevent NaN
 
-        outputs = aux_net(inputs)[0]
-        targets_prob = F.softmax(outputs.float(), dim=1)
-        y_tensor_adv = targets
-        step_sign = 1.0
+    # Actual Sinkhorn loop ......................................................................
+    u, v, err = 0.0 * mu, 0.0 * nu, 0.0
+    actual_nits = 0  # to check if algorithm terminates because of threshold or max iterations reached
 
-        x = inputs.detach()
-        if self.rand:
-            x = x + torch.zeros_like(x).uniform_(-self.epsilon, self.epsilon)
+    for _ in range(niter):
+        u1 = u  # useful to check the update
+        u = epsilon * (torch.log(mu) - lse(M(u, v)).squeeze()) + u
+        v = epsilon * (torch.log(nu) - lse(M(u, v).t()).squeeze()) + v
+        # accelerated unbalanced iterations
+        # u = ave( u, lam * ( epsilon * ( torch.log(mu) - lse(M(u,v)).squeeze()   ) + u ) )
+        # v = ave( v, lam * ( epsilon * ( torch.log(nu) - lse(M(u,v).t()).squeeze() ) + v ) )
+        err = (u - u1).abs().sum()
 
-        for i in range(self.num_steps):
-            x.requires_grad_()
-            zero_gradients(x)
-            if x.grad is not None:
-                x.grad.data.fill_(0)
-            aux_net.eval()
-            logits = aux_net(x)[0]
-            loss = self.loss_func(logits, y_tensor_adv)
-            loss = loss.mean()
-            aux_net.zero_grad()
-            loss.backward()
+        actual_nits += 1
+        if (err < thresh).cpu().data.numpy():
+            break
+    U, V = u, v
 
-            x_adv = x.data + step_sign * self.step_size * torch.sign(
-                x.grad.data
-            )
-            x_adv = torch.min(
-                torch.max(x_adv, inputs - self.epsilon), inputs + self.epsilon
-            )
-            x_adv = torch.clamp(x_adv, -1.0, 1.0)
-            x = Variable(x_adv)
-
-        if self.train_flag:
-            self.basic_net.train()
-        else:
-            self.basic_net.eval()
-
-        logits_pert = self.basic_net(x.detach())[0]
-
-        return logits_pert, targets_prob.detach()
+    pi = torch.exp(M(U, V))  # Transport plan pi = diag(a)*K*diag(b)
+    pi = pi.to("cuda").float()
+    return pi  # return the transport
 
 
-class Attack_FeaScatter(nn.Module):
-    def __init__(self, basic_net, config, attack_net=None):
-        super(Attack_FeaScatter, self).__init__()
-        self.basic_net = basic_net
-        self.attack_net = attack_net
-        self.rand = config["random_start"]
-        self.step_size = config["step_size"]
-        self.epsilon = config["epsilon"]
-        self.num_steps = config["num_steps"]
-        self.train_flag = (
-            True if "train" not in config.keys() else config["train"]
-        )
-        self.box_type = (
-            "white" if "box_type" not in config.keys() else config["box_type"]
-        )
-        self.ls_factor = (
-            0.1 if "ls_factor" not in config.keys() else config["ls_factor"]
-        )
+def IPOT(cost_matrix, beta=1, device="cuda"):
+    m = cost_matrix.size(0)
+    n = cost_matrix.size(1)
+    sigma = 1.0 / n * torch.ones([n, 1]).to(device)
 
-        print(config)
+    T = torch.ones([m, n]).to(device)
+    A = torch.exp(-cost_matrix / beta)
 
-    def forward(
-        self, inputs, targets, attack=True, targeted_label=-1, batch_idx=0
-    ):
-        if not attack:
-            outputs, _ = self.basic_net(inputs, return_feature=True)
-            return outputs, None
-        if self.box_type == "white":
-            aux_net = pickle.loads(pickle.dumps(self.basic_net))
-        elif self.box_type == "black":
-            assert (
-                self.attack_net is not None
-            ), "should provide an additional net in black-box case"
-            aux_net = pickle.loads(pickle.dumps(self.basic_net))
+    for t in range(50):
+        # BUG: should be elementwise product, * in numpy
+        # Q = torch.mm(A, T)
+        Q = A * T  # Hardmard product
+        for k in range(1):
+            delta = 1.0 / (m * torch.mm(Q, sigma))
+            sigma = 1.0 / (n * torch.mm(delta.t(), Q)).t()
+            # sigma = 1.0 / (n * torch.mv(Q, delta))
+        tmp = torch.mm(construct_diag(torch.squeeze(delta)), Q)
+        T = torch.mm(tmp, construct_diag(torch.squeeze(sigma)))
 
-        aux_net.eval()
-        batch_size = inputs.size(0)
-        m = batch_size
-        n = batch_size
+    return T
 
-        logits = aux_net(inputs, return_feature=True)[0]
-        num_classes = logits.size(1)
 
-        outputs = aux_net(inputs, return_feature=True)[0]
+def construct_diag(d):
+    n = d.size(0)
+    x = torch.zeros([n, n]).to(d.device)
+    x[range(n), range(n)] = d.view(-1)
+    return x
 
-        x = inputs.detach()
 
-        x = x + torch.zeros_like(x).uniform_(-self.epsilon, self.epsilon)
+def get_cost_matrix(x_feature, y_feature):
+    C_fea = cost_matrix_cos(x_feature, y_feature)  # Wasserstein cost function
+    return C_fea
 
-        if self.train_flag:
-            self.basic_net.train()
-        else:
-            self.basic_net.eval()
 
-        logits_pred_nat, fea_nat = aux_net(inputs, return_feature=True)
+def cost_matrix_cos(x, y, p=2):
+    # return the m*n sized cost matrix
+    "Returns the matrix of $|x_i-y_j|^p$."
+    # un squeeze differently so that the tensors can broadcast
+    # dim-2 (summed over) is the feature dim
+    x_col = x.unsqueeze(1)
+    y_lin = y.unsqueeze(0)
 
-        num_classes = logits_pred_nat.size(1)
-        y_gt = one_hot_tensor(targets, num_classes, device)
+    cos = nn.CosineSimilarity(dim=2, eps=1e-6)
+    c = torch.clamp(1 - cos(x_col, y_lin), min=0)
 
-        loss_ce = softCrossEntropy()
-
-        iter_num = self.num_steps
-
-        for i in range(iter_num):
-            x.requires_grad_()
-            zero_gradients(x)
-            if x.grad is not None:
-                x.grad.data.fill_(0)
-
-            logits_pred, fea = aux_net(x, return_feature=True)
-
-            ot_loss = sinkhorn_loss_joint_IPOT(
-                1, 0.00, logits_pred_nat, logits_pred, None, None, 0.01, m, n
-            )
-
-            aux_net.zero_grad()
-            adv_loss = ot_loss
-            adv_loss.backward(retain_graph=True)
-            x_adv = x.data + self.step_size * torch.sign(x.grad.data)
-            x_adv = torch.min(
-                torch.max(x_adv, inputs - self.epsilon), inputs + self.epsilon
-            )
-            x_adv = torch.clamp(x_adv, -1.0, 1.0)
-            x = Variable(x_adv)
-
-            logits_pred, fea = self.basic_net(x, return_feature=True)
-            self.basic_net.zero_grad()
-
-            y_sm = label_smoothing(
-                y_gt, y_gt.size(1), self.ls_factor
-            )
-
-            adv_loss = loss_ce(logits_pred, y_sm.detach())
-
-        return logits_pred, adv_loss
+    return c

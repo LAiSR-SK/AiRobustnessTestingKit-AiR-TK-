@@ -1,6 +1,5 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-from __future__ import print_function
 
 import argparse
 import copy
@@ -8,11 +7,19 @@ import os
 import time
 
 import torch
-from torch import nn, optim
-from autoattack import AutoAttack
-from helper_functions import load_data, cw_whitebox, mim_whitebox, get_model, robust_eval, eval_clean, adjust_learning_rate
 from adversarial_training_toolkit.attack import create_attack
-from adversarial_training_toolkit.loss import standard_loss, accuracy
+from adversarial_training_toolkit.loss import accuracy, standard_loss
+from autoattack import AutoAttack
+from helper_functions import (
+    adjust_learning_rate,
+    cw_whitebox,
+    eval_clean,
+    get_model,
+    load_data,
+    mim_whitebox,
+    robust_eval,
+)
+from torch import nn, optim
 from warmup_round import main_warmup
 
 """Trains a model using the Various Attacks method.
@@ -162,13 +169,7 @@ def train(
         # Print training progress
         if batch_idx % args.log_interval == 0:
             print(
-                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                    epoch,
-                    batch_idx * len(data),
-                    len(train_loader.dataset),
-                    100.0 * batch_idx / len(train_loader),
-                    loss.item(),
-                )
+                f"Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100.0 * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}"
             )
 
 
@@ -453,7 +454,7 @@ def main(ds_name, mod_name, clean_epochs):
     """
 
     # Create file to print training progress
-    filename = "va-epochs-{}-{}-output.txt".format(ds_name, mod_name)
+    filename = f"va-epochs-{ds_name}-{mod_name}-output.txt"
     f = open(filename, "a")
 
     # Initialize the model based on the specified architecture
@@ -469,9 +470,7 @@ def main(ds_name, mod_name, clean_epochs):
             torch.load(
                 os.path.join(
                     model_dir,
-                    "model-warmup-{}-{}-epoch{}.pt".format(
-                        ds_name, mod_name, clean_epochs
-                    ),
+                    f"model-warmup-{ds_name}-{mod_name}-epoch{clean_epochs}.pt",
                 )
             )
         )
@@ -493,14 +492,14 @@ def main(ds_name, mod_name, clean_epochs):
         model.state_dict(),
         os.path.join(
             model_dir,
-            "model-va-epochs-{}-{}-start.pt".format(ds_name, mod_name),
+            f"model-va-epochs-{ds_name}-{mod_name}-start.pt",
         ),
     )
     torch.save(
         optimizer.state_dict(),
         os.path.join(
             model_dir,
-            "opt-va-epochs-{}-{}-start.tar".format(ds_name, mod_name),
+            f"opt-va-epochs-{ds_name}-{mod_name}-start.tar",
         ),
     )
 
@@ -552,18 +551,14 @@ def main(ds_name, mod_name, clean_epochs):
                 model.state_dict(),
                 os.path.join(
                     model_dir,
-                    "model-va-epochs-{}-{}-epoch{}.pt".format(
-                        ds_name, mod_name, epoch
-                    ),
+                    f"model-va-epochs-{ds_name}-{mod_name}-epoch{epoch}.pt",
                 ),
             )
             torch.save(
                 optimizer.state_dict(),
                 os.path.join(
                     model_dir,
-                    "opt-va-epochs-{}-{}-epoch{}.tar".format(
-                        ds_name, mod_name, epoch
-                    ),
+                    f"opt-va-epochs-{ds_name}-{mod_name}-epoch{epoch}.tar",
                 ),
             )
 
@@ -578,9 +573,7 @@ def main(ds_name, mod_name, clean_epochs):
 
     trained_model.load_state_dict(
         torch.load(
-            "data/model/model-va-epochs-{}-{}-epoch{}.pt".format(
-                ds_name, mod_name, args.epochs
-            )
+            f"data/model/model-va-epochs-{ds_name}-{mod_name}-epoch{args.epochs}.pt"
         )
     )
     model_copy = copy.deepcopy(trained_model)

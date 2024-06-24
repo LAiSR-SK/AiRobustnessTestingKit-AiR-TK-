@@ -8,6 +8,7 @@ Reference:
 [1] Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun
     Deep Residual Learning for Image Recognition. arXiv:1512.03385
 """
+
 import argparse
 
 import torch.nn as nn
@@ -147,6 +148,7 @@ class ResNet_Strategy(nn.Module):
         Attack_step_size = self.Attack_step_size(out)
 
         return Attack_method, Attack_epsilon, Attack_iters, Attack_step_size
+
 
 def get_args():
     parser = argparse.ArgumentParser("LAS_AT")

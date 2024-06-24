@@ -29,7 +29,7 @@ cifar10_std = (
 
 
 def normalise(x, mean=cifar10_mean, std=cifar10_std):
-    x, mean, std = [np.array(a, np.float32) for a in (x, mean, std)]
+    x, mean, std = (np.array(a, np.float32) for a in (x, mean, std))
     x -= mean * 255
     x *= 1.0 / (255 * std)
     return x

@@ -1,6 +1,5 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-from __future__ import print_function
 
 import torch
 import torch.nn.functional as F
@@ -42,16 +41,16 @@ def adt_va_loss(model, x_natural, y, att, ds_name, optimizer, device):
 
 def clean_loss(model, x, y, optimizer):
     """
-        Standard training loss function with no adversarial attack.
+    Standard training loss function with no adversarial attack.
 
-        :param model: image classifier
-        :param x: batch of clean images
-        :param y: correct labels for the clean images in x
-        :param optimizer: optimizer for the model
+    :param model: image classifier
+    :param x: batch of clean images
+    :param y: correct labels for the clean images in x
+    :param optimizer: optimizer for the model
 
-        :return loss between correct labels and model output for the batch x
+    :return loss between correct labels and model output for the batch x
     """
-    optimizer.zero_grad() # zero out the gradients
+    optimizer.zero_grad()  # zero out the gradients
 
     # Calculate cross-entropy loss between model output and correct labels
     out = model(x)
@@ -60,7 +59,7 @@ def clean_loss(model, x, y, optimizer):
 
     # Format predictions and batch metrics for return
     preds = out.detach()
-    batch_metrics = {'loss': loss.item(), 'clean_acc': accuracy(y, preds)}
+    batch_metrics = {"loss": loss.item(), "clean_acc": accuracy(y, preds)}
 
     return loss, batch_metrics
 
@@ -256,25 +255,25 @@ def standard_loss(model, x, y, optimizer):
 
 def standardat_loss(model, x, y, optimizer, keep_clean=False):
     """
-        Basic loss function from Madry et al. calculating an adversarial sample and the
-        loss resulting.
+    Basic loss function from Madry et al. calculating an adversarial sample and the
+    loss resulting.
 
-        :param model: trained image classifier
-        :param x: batch of clean of images
-        :param y: labels for images in x
-        :param optimizer: optimizer associated with the model
-        :param attack: attack used to perturb clean images
-        :param keep_clean: True if clean examples are kept
+    :param model: trained image classifier
+    :param x: batch of clean of images
+    :param y: labels for images in x
+    :param optimizer: optimizer associated with the model
+    :param attack: attack used to perturb clean images
+    :param keep_clean: True if clean examples are kept
 
-        :return cross-entropy loss between the adversarial output and correct class
+    :return cross-entropy loss between the adversarial output and correct class
     """
 
     # Calculate the adversarial example based on the atts
     criterion = nn.CrossEntropyLoss()
-    attack = create_attack(model, criterion, 'linf-pgd', 0.1, 40, 0.01)
+    attack = create_attack(model, criterion, "linf-pgd", 0.1, 40, 0.01)
     x_adv, _ = attack.perturb(x, y)
 
-    optimizer.zero_grad() # zero out the gradients
+    optimizer.zero_grad()  # zero out the gradients
 
     # Correctly format x_adv and y_adv
     if keep_clean:

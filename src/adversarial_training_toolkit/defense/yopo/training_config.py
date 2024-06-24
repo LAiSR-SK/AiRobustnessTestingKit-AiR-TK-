@@ -83,7 +83,7 @@ class TrainingConfigBase(metaclass=ABCMeta):
         return None
 
 
-class SGDOptimizerMaker(object):
+class SGDOptimizerMaker:
     def __init__(self, lr=0.1, momentum=0.9, weight_decay=1e-4):
         self.lr = lr
         self.momentum = momentum
@@ -98,7 +98,7 @@ class SGDOptimizerMaker(object):
         )
 
 
-class PieceWiseConstantLrSchedulerMaker(object):
+class PieceWiseConstantLrSchedulerMaker:
     def __init__(self, milestones: List[int], gamma: float = 0.1):
         self.milestones = milestones
         self.gamma = gamma
@@ -109,7 +109,7 @@ class PieceWiseConstantLrSchedulerMaker(object):
         )
 
 
-class IPGDAttackMethodMaker(object):
+class IPGDAttackMethodMaker:
     def __init__(self, eps, sigma, nb_iters, norm, mean, std):
         self.eps = eps
         self.sigma = sigma
@@ -138,7 +138,7 @@ class IPGDAttackMethodMaker(object):
         )
 
 
-class LambdaLrSchedulerMaker(object):
+class LambdaLrSchedulerMaker:
     def __init__(self, func, last_epoch=-1):
         assert callable(func)
 

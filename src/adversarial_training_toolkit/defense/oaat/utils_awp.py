@@ -31,7 +31,7 @@ def add_into_weights(model, diff, coeff=1.0):
                 param.add_(coeff * diff[name])
 
 
-class TradesAWP(object):
+class TradesAWP:
     def __init__(self, model, proxy, proxy_optim, gamma):
         super(TradesAWP, self).__init__()
         self.model = model

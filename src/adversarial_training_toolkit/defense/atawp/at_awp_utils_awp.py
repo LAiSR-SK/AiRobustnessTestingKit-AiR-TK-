@@ -31,7 +31,7 @@ def add_into_weights(model, diff, coeff=1.0):
                 param.add_(coeff * diff[name])
 
 
-class AdvWeightPerturb(object):
+class AdvWeightPerturb:
     def __init__(self, model, proxy, proxy_optim, gamma):
         super(AdvWeightPerturb, self).__init__()
         self.model = model

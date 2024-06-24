@@ -1,6 +1,5 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-from __future__ import print_function
 
 import argparse
 import os
@@ -16,16 +15,6 @@ from adversarial_training_toolkit.defense.tradesawp.trades_awp_utils_awp import 
 )
 
 # from utils import Bar, Logger, AverageMeter, accuracy
-from adversarial_training_toolkit.defense.tradesawp.trades_awp_utils_eval import (
-    T,
-)
-from adversarial_training_toolkit.defense.tradesawp.trades_awp_utils_logger import (
-    T,
-)
-from adversarial_training_toolkit.defense.tradesawp.trades_awp_utils_misc import (
-    T,
-)
-
 # import models
 from adversarial_training_toolkit.model import WideResNet
 from torch.autograd import Variable
@@ -277,7 +266,7 @@ def train(model, train_loader, optimizer, epoch, awp_adversary, data):
     top1 = AverageMeter()
     end = time.time()
 
-    print("epoch: {}".format(epoch))
+    print(f"epoch: {epoch}")
     # bar = Bar('Processing', max=len(train_loader))
 
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -469,12 +458,12 @@ def main(data):
         if epoch % args.save_freq == 0:
             torch.save(
                 model.state_dict(),
-                os.path.join(model_dir, "ours-model-epoch{}.pt".format(epoch)),
+                os.path.join(model_dir, f"ours-model-epoch{epoch}.pt"),
             )
             torch.save(
                 optimizer.state_dict(),
                 os.path.join(
-                    model_dir, "ours-opt-checkpoint_epoch{}.tar".format(epoch)
+                    model_dir, f"ours-opt-checkpoint_epoch{epoch}.tar"
                 ),
             )
     return model

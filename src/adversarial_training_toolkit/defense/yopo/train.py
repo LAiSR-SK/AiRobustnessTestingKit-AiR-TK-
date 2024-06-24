@@ -25,7 +25,7 @@ from adversarial_training_toolkit.defense.yopo.utils_misc import (
 # from network import create_network
 from adversarial_training_toolkit.defense.yopo.wide_resnet import WideResNet
 
-DEVICE = torch.device("cuda:{}".format(args.d))
+DEVICE = torch.device(f"cuda:{args.d}")
 torch.backends.cudnn.benchmark = True
 
 # writer = SummaryWriter(log_dir=config.log_dir)
@@ -86,9 +86,7 @@ def main_yopo(ds_name):
             break
         now_epoch = now_epoch + 1
 
-        descrip_str = "Training epoch:{}/{} -- lr:{}".format(
-            now_epoch, config.num_epochs, lr_scheduler.get_lr()[0]
-        )
+        descrip_str = f"Training epoch:{now_epoch}/{config.num_epochs} -- lr:{lr_scheduler.get_lr()[0]}"
         acc, yofoacc = train_one_epoch(
             net,
             ds_train,
@@ -115,7 +113,7 @@ def main_yopo(ds_name):
             optimizer,
             lr_scheduler,
             file_name=os.path.join(
-                config.model_dir, "epoch-{}.checkpoint".format(now_epoch)
+                config.model_dir, f"epoch-{now_epoch}.checkpoint"
             ),
         )
 

@@ -9,7 +9,7 @@ import torch
 
 def add_path(path):
     if path not in sys.path:
-        print("Adding {}".format(path))
+        print(f"Adding {path}")
         sys.path.append(path)
 
 

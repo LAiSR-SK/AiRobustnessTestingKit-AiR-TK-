@@ -2,7 +2,6 @@
 #  Copied from https://github.com/bearpaw/pytorch-classification/blob/master/utils/eval.py  #
 #############################################################################################
 
-from __future__ import absolute_import, print_function
 
 __all__ = ["accuracy"]
 

@@ -4,7 +4,6 @@
 # (C) Wei YANG 2017
 # Copied from https://github.com/bearpaw/pytorch-classification/blob/master/utils/logger.py
 
-from __future__ import absolute_import
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -26,7 +25,7 @@ def plot_overlap(logger, names=None):
     return [logger.title + "(" + name + ")" for name in names]
 
 
-class Logger(object):
+class Logger:
     """Save training process to log file with simple plot function."""
 
     def __init__(self, fpath, title=None, resume=False):
@@ -35,7 +34,7 @@ class Logger(object):
         self.title = "" if title is None else title
         if fpath is not None:
             if resume:
-                self.file = open(fpath, "r")
+                self.file = open(fpath)
                 name = self.file.readline()
                 self.names = name.rstrip().split("\t")
                 self.numbers = {}
@@ -67,7 +66,7 @@ class Logger(object):
     def append(self, numbers):
         assert len(self.names) == len(numbers), "Numbers do not match names"
         for index, num in enumerate(numbers):
-            self.file.write("{0:.6f}".format(num))
+            self.file.write(f"{num:.6f}")
             self.file.write("\t")
             self.numbers[self.names[index]].append(num)
         self.file.write("\n")
@@ -87,7 +86,7 @@ class Logger(object):
             self.file.close()
 
 
-class LoggerMonitor(object):
+class LoggerMonitor:
     """Load and visualize multiple logs."""
 
     def __init__(self, paths):
@@ -140,7 +139,7 @@ if __name__ == "__main__":
     savefig("test.eps")
 
 
-class AverageMeter(object):
+class AverageMeter:
     """Computes and stores the average and current value
     Imported from https://github.com/pytorch/examples/blob/master/imagenet/main.py#L247-L262
     """

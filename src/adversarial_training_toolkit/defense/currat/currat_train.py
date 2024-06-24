@@ -2,8 +2,6 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 """params must provide: --data, --net, --method, --expect_acc/--validk, --maxk(for cat)"""
 
-from __future__ import print_function
-
 import argparse
 import json
 import os
@@ -114,8 +112,6 @@ class Flatten(nn.Module):
         return x.view(x.size()[0], -1)
 
 
-
-
 # Model
 def resumeFrom(modelFN, begin=True):
     global k, prevTime, optimizer, net
@@ -201,9 +197,7 @@ if args.sgd:
 epsilon, step_size = 0, 0
 if args.data == "mnist":
     epsilon, step_size = 0.3, 0.6
-elif args.data == "cifar10":
-    epsilon, step_size = 0.032, 0.064
-elif args.data == "cifar100":
+elif args.data == "cifar10" or args.data == "cifar100":
     epsilon, step_size = 0.032, 0.064
 elif args.data == "svhn":
     epsilon, step_size = 0.047, 0.094

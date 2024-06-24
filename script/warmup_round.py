@@ -1,6 +1,5 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-from __future__ import print_function
 
 import os
 import time
@@ -63,13 +62,7 @@ def train(args, model, device, train_loader, optimizer, epoch, ds_name):
         # Print training progress
         if batch_idx % args.log_interval == 0:
             print(
-                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                    epoch,
-                    batch_idx * len(data),
-                    len(train_loader.dataset),
-                    100.0 * batch_idx / len(train_loader),
-                    loss.item(),
-                )
+                f"Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100.0 * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}"
             )
 
 
@@ -85,7 +78,7 @@ def main_warmup(ds_name, mod_name, epochs):
     """
 
     # Create file to print training progress
-    filename = "log/clean-{}-{}-output.txt".format(ds_name, mod_name)
+    filename = f"log/clean-{ds_name}-{mod_name}-output.txt"
     f = open(filename, "a")
 
     # Initialize the model based on the specified architecture
@@ -133,18 +126,14 @@ def main_warmup(ds_name, mod_name, epochs):
                 model.state_dict(),
                 os.path.join(
                     model_dir,
-                    "model-warmup-{}-{}-epoch{}.pt".format(
-                        ds_name, mod_name, epoch
-                    ),
+                    f"model-warmup-{ds_name}-{mod_name}-epoch{epoch}.pt",
                 ),
             )
             torch.save(
                 optimizer.state_dict(),
                 os.path.join(
                     model_dir,
-                    "opt-warmup-{}-{}-epoch{}.tar".format(
-                        ds_name, mod_name, epoch
-                    ),
+                    f"opt-warmup-{ds_name}-{mod_name}-epoch{epoch}.tar",
                 ),
             )
 

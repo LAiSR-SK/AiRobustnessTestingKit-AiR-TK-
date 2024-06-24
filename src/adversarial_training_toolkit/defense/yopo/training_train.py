@@ -76,10 +76,10 @@ def train_one_epoch(
         cleanacc = acc[0].item()
         cleanloss = loss.item()
         # pbar_dic['grad'] = '{}'.format(grad_mean)
-        pbar_dic["Acc"] = "{:.2f}".format(cleanacc)
-        pbar_dic["loss"] = "{:.2f}".format(cleanloss)
-        pbar_dic["AdvAcc"] = "{:.2f}".format(advacc)
-        pbar_dic["Advloss"] = "{:.2f}".format(advloss)
+        pbar_dic["Acc"] = f"{cleanacc:.2f}"
+        pbar_dic["loss"] = f"{cleanloss:.2f}"
+        pbar_dic["AdvAcc"] = f"{advacc:.2f}"
+        pbar_dic["Advloss"] = f"{advloss:.2f}"
         pbar.set_postfix(pbar_dic)
 
 
@@ -110,8 +110,8 @@ def eval_one_epoch(
                 adv_accuracy.update(acc[0].item())
 
         pbar_dic = OrderedDict()
-        pbar_dic["CleanAcc"] = "{:.2f}".format(clean_accuracy.mean)
-        pbar_dic["AdvAcc"] = "{:.2f}".format(adv_accuracy.mean)
+        pbar_dic["CleanAcc"] = f"{clean_accuracy.mean:.2f}"
+        pbar_dic["AdvAcc"] = f"{adv_accuracy.mean:.2f}"
 
         pbar.set_postfix(pbar_dic)
 

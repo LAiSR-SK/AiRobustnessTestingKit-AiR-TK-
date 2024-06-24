@@ -299,13 +299,7 @@ def evaluation(epoch, model, dataloader, loss_func, epsilon, alpha, num_steps):
         counter += inputs.size(0)
 
         sys.stdout.write(
-            "\r [Eval] [{}/{} ({:.0f}%)]\tacc nat: {:.5f}[%]\tacc rob: {:.5f}[%]".format(
-                idx * len(inputs),
-                len(dataloader.dataset),
-                100.0 * idx / len(dataloader),
-                100 * (total_corr_nat / counter),
-                100 * (total_corr_rob / counter),
-            )
+            f"\r [Eval] [{idx * len(inputs)}/{len(dataloader.dataset)} ({100.0 * idx / len(dataloader):.0f}%)]\tacc nat: {100 * (total_corr_nat / counter):.5f}[%]\tacc rob: {100 * (total_corr_rob / counter):.5f}[%]"
         )
 
     avg_nat = 100 * (total_corr_nat / len(dataloader.dataset))

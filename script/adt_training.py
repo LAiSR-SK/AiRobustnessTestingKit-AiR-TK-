@@ -1,6 +1,5 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-from __future__ import print_function
 
 import argparse
 import copy
@@ -125,13 +124,7 @@ def train(args, model, device, train_loader, optimizer, ds_name, epoch):
         # print progress
         if batch_idx % args.log_interval == 0:
             print(
-                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                    epoch,
-                    batch_idx * len(data),
-                    len(train_loader.dataset),
-                    100.0 * batch_idx / len(train_loader),
-                    loss.item(),
-                )
+                f"Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100.0 * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}"
             )
 
 
@@ -146,7 +139,7 @@ def main_adt(ds_name, mod_name="wideres34"):
     """
 
     # Set up file for printing the output
-    filename = "log/adt-{}-{}-output.txt".format(ds_name, mod_name)
+    filename = f"log/adt-{ds_name}-{mod_name}-output.txt"
     f = open(filename, "a")
 
     # Initialize the desired model
@@ -192,15 +185,11 @@ def main_adt(ds_name, mod_name="wideres34"):
     # Save the model and optimizer
     torch.save(
         model.state_dict(),
-        os.path.join(
-            model_dir, "model-adt-{}-{}-start.pt".format(ds_name, mod_name)
-        ),
+        os.path.join(model_dir, f"model-adt-{ds_name}-{mod_name}-start.pt"),
     )
     torch.save(
         optimizer.state_dict(),
-        os.path.join(
-            model_dir, "opt-adt-{}-{}-start.tar".format(ds_name, mod_name)
-        ),
+        os.path.join(model_dir, f"opt-adt-{ds_name}-{mod_name}-start.tar"),
     )
 
     # Begin training for the designated number of epochs
@@ -234,18 +223,14 @@ def main_adt(ds_name, mod_name="wideres34"):
                 model.state_dict(),
                 os.path.join(
                     model_dir,
-                    "model-adt-{}-{}-epoch{}.pt".format(
-                        ds_name, mod_name, epoch
-                    ),
+                    f"model-adt-{ds_name}-{mod_name}-epoch{epoch}.pt",
                 ),
             )
             torch.save(
                 optimizer.state_dict(),
                 os.path.join(
                     model_dir,
-                    "opt-adt-{}-{}-epoch{}.tar".format(
-                        ds_name, mod_name, epoch
-                    ),
+                    f"opt-adt-{ds_name}-{mod_name}-epoch{epoch}.tar",
                 ),
             )
 
@@ -284,9 +269,7 @@ def main_adt(ds_name, mod_name="wideres34"):
         raise NotImplementedError
     trained_model.load_state_dict(
         torch.load(
-            "data/model/model-adt-{}-{}-epoch{}.pt".format(
-                ds_name, mod_name, args.epochs
-            )
+            f"data/model/model-adt-{ds_name}-{mod_name}-epoch{args.epochs}.pt"
         )
     )
     model_copy = copy.deepcopy(trained_model)

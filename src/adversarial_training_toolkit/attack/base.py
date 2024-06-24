@@ -5,7 +5,7 @@ import torch
 from adversarial_training_toolkit.util import replicate_input
 
 
-class Attack(object):
+class Attack:
     """
     Abstract base class for all attack classes.
     Arguments:
@@ -37,7 +37,7 @@ class Attack(object):
         return self.perturb(*args, **kwargs)
 
 
-class LabelMixin(object):
+class LabelMixin:
     def _get_predicted_label(self, x):
         """
         Compute predicted labels given x. Used to prevent label leaking during adversarial training.

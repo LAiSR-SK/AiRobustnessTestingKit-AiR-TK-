@@ -1,6 +1,5 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-from __future__ import print_function
 
 import argparse
 import copy
@@ -173,22 +172,10 @@ def train(
         # Print the training progress
         if batch_idx % args.log_interval == 0:
             print(
-                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                    epoch,
-                    batch_idx * len(data),
-                    len(train_loader.dataset),
-                    100.0 * batch_idx / len(train_loader),
-                    loss.item(),
-                )
+                f"Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100.0 * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}"
             )
             f.write(
-                "Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}".format(
-                    epoch,
-                    batch_idx * len(data),
-                    len(train_loader.dataset),
-                    100.0 * batch_idx / len(train_loader),
-                    loss.item(),
-                )
+                f"Train Epoch: {epoch} [{batch_idx * len(data)}/{len(train_loader.dataset)} ({100.0 * batch_idx / len(train_loader):.0f}%)]\tLoss: {loss.item():.6f}"
             )
 
     # Update the SWA model/scheduler
@@ -211,7 +198,7 @@ def main_va_epochs(ds_name, mod_name, clean_epochs=0):
     """
 
     # Set up file for printing the outut
-    filename = "log/adt-va-{}-{}-output.txt".format(ds_name, mod_name)
+    filename = f"log/adt-va-{ds_name}-{mod_name}-output.txt"
     f = open(filename, "a")
 
     # Initialize the model based on the specified parameter
@@ -227,9 +214,7 @@ def main_va_epochs(ds_name, mod_name, clean_epochs=0):
             torch.load(
                 os.path.join(
                     model_dir,
-                    "model-warmup-{}-{}-epoch{}.pt".format(
-                        ds_name, mod_name, clean_epochs
-                    ),
+                    f"model-warmup-{ds_name}-{mod_name}-epoch{clean_epochs}.pt",
                 )
             )
         )
@@ -257,15 +242,11 @@ def main_va_epochs(ds_name, mod_name, clean_epochs=0):
     # Save the model and optimizer
     torch.save(
         model.state_dict(),
-        os.path.join(
-            model_dir, "model-adt-va-{}-{}-start.pt".format(ds_name, mod_name)
-        ),
+        os.path.join(model_dir, f"model-adt-va-{ds_name}-{mod_name}-start.pt"),
     )
     torch.save(
         optimizer.state_dict(),
-        os.path.join(
-            model_dir, "opt-adt-va-{}-{}-start.tar".format(ds_name, mod_name)
-        ),
+        os.path.join(model_dir, f"opt-adt-va-{ds_name}-{mod_name}-start.tar"),
     )
 
     # For each epoch
@@ -331,27 +312,21 @@ def main_va_epochs(ds_name, mod_name, clean_epochs=0):
                 model.state_dict(),
                 os.path.join(
                     model_dir,
-                    "model-adt-va-{}-{}-epoch{}.pt".format(
-                        ds_name, mod_name, epoch
-                    ),
+                    f"model-adt-va-{ds_name}-{mod_name}-epoch{epoch}.pt",
                 ),
             )
             torch.save(
                 swa_model.state_dict(),
                 os.path.join(
                     model_dir,
-                    "swa-model-adt-va-{}-{}-epoch{}.pt".format(
-                        ds_name, mod_name, epoch
-                    ),
+                    f"swa-model-adt-va-{ds_name}-{mod_name}-epoch{epoch}.pt",
                 ),
             )
             torch.save(
                 optimizer.state_dict(),
                 os.path.join(
                     model_dir,
-                    "opt-adt-va-{}-{}-epoch{}.tar".format(
-                        ds_name, mod_name, epoch
-                    ),
+                    f"opt-adt-va-{ds_name}-{mod_name}-epoch{epoch}.tar",
                 ),
             )
 
@@ -367,17 +342,13 @@ def main_va_epochs(ds_name, mod_name, clean_epochs=0):
         trained_model = AveragedModel(trained_model).to(device)
         trained_model.load_state_dict(
             torch.load(
-                "data/model/swa-model-adt-va-{}-{}-epoch{}.pt".format(
-                    ds_name, mod_name, args.epochs
-                )
+                f"data/model/swa-model-adt-va-{ds_name}-{mod_name}-epoch{args.epochs}.pt"
             )
         )
     else:
         trained_model.load_state_dict(
             torch.load(
-                "data/model/model-adt-va-{}-{}-epoch{}.pt".format(
-                    ds_name, mod_name, args.epochs
-                )
+                f"data/model/model-adt-va-{ds_name}-{mod_name}-epoch{args.epochs}.pt"
             )
         )
     model_copy = copy.deepcopy(trained_model)

@@ -1,7 +1,6 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 # This is a modified version of https://github.com/pytorch/vision/blob/master/torchvision/datasets/cifar.py
-from __future__ import print_function
 
 import os
 import os.path

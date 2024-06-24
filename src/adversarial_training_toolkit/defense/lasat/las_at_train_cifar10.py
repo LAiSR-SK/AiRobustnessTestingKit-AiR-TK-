@@ -29,7 +29,6 @@ from torch.nn import functional as F
 CUDA_LAUNCH_BLOCKING = 1
 
 
-
 def get_args():
     parser = argparse.ArgumentParser("LAS_AT")
     # target model
@@ -453,9 +452,7 @@ def Attack_policy_batch(input_batch, y_batch, target_model, policies):
         attack_iters_batch.append(temp_batch.cpu().numpy())
     alpha_batch = torch.from_numpy(np.array(alpha_batch)).cuda()
     epsilon_batch = torch.from_numpy(np.array(epsilon_batch)).cuda()
-    attack_iters_batch = torch.from_numpy(
-        np.array(attack_iters_batch)
-    ).cuda()
+    attack_iters_batch = torch.from_numpy(np.array(attack_iters_batch)).cuda()
 
     max_attack_iters = torch.max(attack_iters_batch).cpu().numpy()
     # print(torch.max(attack_iters_batch))
@@ -743,6 +740,7 @@ else:
 
 global curr_step
 curr_step = 0
+
 
 def train(epoch):
     print("\nEpoch: %d" % epoch)
