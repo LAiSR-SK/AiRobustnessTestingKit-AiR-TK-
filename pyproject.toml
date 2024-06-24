@@ -3,5 +3,4 @@ exclude = [".conda", "submodules"]
 line-length = 79
 
 [tool.ruff.lint]
-select = ["I"]
-ignore = ["F401"]
+select = ["E", "F", "I", "UP", "B", "SIM"]

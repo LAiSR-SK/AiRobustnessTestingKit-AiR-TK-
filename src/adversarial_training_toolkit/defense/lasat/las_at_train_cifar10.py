@@ -852,7 +852,7 @@ def train(epoch):
     """logger.info('%d \t %.1f \t \t %.4f \t %.4f \t %.4f',
                     epoch, epoch_time - start_epoch_time, lr, train_loss / train_n, train_acc / train_n)"""
 
-    model_dir = "../saved-models"
+    model_dir = "../data/model"
     torch.save(
         target_model.state_dict(),
         os.path.join(
@@ -967,7 +967,7 @@ def main_lasat10():
     # print(pgd_acc_list)
     # print(clean_acc_list)
 
-    model_dir = "../saved-models"
+    model_dir = "../data/model"
     torch.save(
         target_model.state_dict(),
         os.path.join(

@@ -78,7 +78,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--model-dir",
-    default="./saved-models",
+    default="./data/model",
     help="directory of model for saving checkpoint",
 )
 parser.add_argument(
@@ -168,7 +168,7 @@ def main_trades(ds_name, mod_name="wideres34"):
     """
 
     # Set up file for printing the output
-    filename = "output/trades-{}-{}-output.txt".format(ds_name, mod_name)
+    filename = "log/trades-{}-{}-output.txt".format(ds_name, mod_name)
     f = open(filename, "a")
 
     # Initialize the desired model
@@ -307,7 +307,7 @@ def main_trades(ds_name, mod_name="wideres34"):
 
     trained_model.load_state_dict(
         torch.load(
-            "saved-models/model-trades-{}-{}-epoch{}.pt".format(
+            "data/model/model-trades-{}-{}-epoch{}.pt".format(
                 ds_name, mod_name, args.epochs
             )
         )

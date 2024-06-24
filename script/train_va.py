@@ -2,14 +2,17 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 from __future__ import print_function
 
+import argparse
 import copy
 import os
 import time
 
-from helper_functions import *
-from losses import *
-from models.resnet import *
-from models.wideresnet import *
+import torch
+from torch import nn, optim
+from autoattack import AutoAttack
+from helper_functions import load_data, cw_whitebox, mim_whitebox, get_model, robust_eval, eval_clean, adjust_learning_rate
+from adversarial_training_toolkit.attack import create_attack
+from adversarial_training_toolkit.loss import standard_loss, accuracy
 from warmup_round import main_warmup
 
 """Trains a model using the Various Attacks method.
@@ -69,7 +72,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--model-dir",
-    default="./saved-models",
+    default="./data/model",
     help="directory of model for saving checkpoint",
 )
 parser.add_argument(
@@ -575,7 +578,7 @@ def main(ds_name, mod_name, clean_epochs):
 
     trained_model.load_state_dict(
         torch.load(
-            "saved-models/model-va-epochs-{}-{}-epoch{}.pt".format(
+            "data/model/model-va-epochs-{}-{}-epoch{}.pt".format(
                 ds_name, mod_name, args.epochs
             )
         )

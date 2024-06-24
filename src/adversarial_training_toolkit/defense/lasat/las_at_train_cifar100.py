@@ -963,7 +963,7 @@ def main_lasat100():
         result_acc = test(epoch)
         print(result_acc)
 
-        model_dir = "../saved-models"
+        model_dir = "../data/model"
         torch.save(
             target_model.state_dict(),
             os.path.join(

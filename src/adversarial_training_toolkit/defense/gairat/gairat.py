@@ -537,7 +537,7 @@ def main_gairat(ds_name, mod_name="wideres34"):
     # logger_test.close()
 
     # Save the final model
-    model_dir = "../saved-models"
+    model_dir = "../data/model"
     torch.save(
         model.state_dict(),
         os.path.join(

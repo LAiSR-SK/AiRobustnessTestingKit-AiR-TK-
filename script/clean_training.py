@@ -2,8 +2,16 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 from __future__ import print_function
 
-from helper_functions import *
-from losses import *
+import argparse
+import copy
+import os
+import time
+
+import torch
+from adversarial_training_toolkit.loss import clean_loss
+from adversarial_training_toolkit.model import ResNet18, ResNet34, ResNet50, ResNet101, ResNet152, WideResNet
+from helper_functions import adjust_learning_rate, load_data, eval_clean, robust_eval
+from torch import optim
 
 parser = argparse.ArgumentParser(
     description="PyTorch CIFAR Adversarial Training Framework"
@@ -56,7 +64,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--model-dir",
-    default="./saved-models",
+    default="./data/model",
     help="directory of model for saving checkpoint",
 )
 parser.add_argument(
@@ -146,7 +154,7 @@ def main_clean(ds_name, mod_name="wideres34"):
     """
 
     # Set up file for printing the output
-    filename = "output/clean-{}-{}-output.txt".format(ds_name, mod_name)
+    filename = "log/clean-{}-{}-output.txt".format(ds_name, mod_name)
     f = open(filename, "a")
 
     # Initialize the desired model
@@ -285,7 +293,7 @@ def main_clean(ds_name, mod_name="wideres34"):
 
     trained_model.load_state_dict(
         torch.load(
-            "saved-models/model-clean-{}-{}-epoch{}.pt".format(
+            "data/model/model-clean-{}-{}-epoch{}.pt".format(
                 ds_name, mod_name, args.epochs
             )
         )

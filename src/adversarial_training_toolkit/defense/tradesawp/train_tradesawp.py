@@ -112,7 +112,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--model-dir",
-    default="./saved-models",
+    default="./data/model",
     help="directory of model for saving checkpoint",
 )
 parser.add_argument(
@@ -484,7 +484,7 @@ def main_trades_awp_10():
     data = "CIFAR10"
     model = main(data)
 
-    md = "./saved-models"
+    md = "./data/model"
     torch.save(
         model.state_dict(),
         os.path.join(
@@ -525,7 +525,7 @@ def main_trades_awp_100():
     data = "CIFAR100"
     model = main(data)
 
-    md = "./saved-models"
+    md = "./data/model"
     torch.save(
         model.state_dict(),
         os.path.join(

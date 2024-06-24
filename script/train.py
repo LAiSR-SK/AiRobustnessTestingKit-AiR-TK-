@@ -367,7 +367,7 @@ def main_va_epochs(ds_name, mod_name, clean_epochs=0):
         trained_model = AveragedModel(trained_model).to(device)
         trained_model.load_state_dict(
             torch.load(
-                "saved-models/swa-model-adt-va-{}-{}-epoch{}.pt".format(
+                "data/model/swa-model-adt-va-{}-{}-epoch{}.pt".format(
                     ds_name, mod_name, args.epochs
                 )
             )
@@ -375,7 +375,7 @@ def main_va_epochs(ds_name, mod_name, clean_epochs=0):
     else:
         trained_model.load_state_dict(
             torch.load(
-                "saved-models/model-adt-va-{}-{}-epoch{}.pt".format(
+                "data/model/model-adt-va-{}-{}-epoch{}.pt".format(
                     ds_name, mod_name, args.epochs
                 )
             )

@@ -503,7 +503,7 @@ def main():
 def main_atawp100():
     model = main()
 
-    model_dir = "../saved-models"
+    model_dir = "../data/model"
     torch.save(
         model.state_dict(),
         os.path.join(

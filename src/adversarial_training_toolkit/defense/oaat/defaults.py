@@ -46,7 +46,7 @@ def use_default(default_arg):
         )
         parser.add_argument(
             "--model-dir",
-            default="./saved-models",
+            default="./data/model",
             help="directory of model for saving checkpoint",
         )
 
@@ -149,7 +149,7 @@ def use_default(default_arg):
         )
         parser.add_argument(
             "--model-dir",
-            default="./saved-models",
+            default="./data/model",
             help="directory of model for saving checkpoint",
         )
 
@@ -252,7 +252,7 @@ def use_default(default_arg):
         )
         parser.add_argument(
             "--model-dir",
-            default="./saved-models",
+            default="./data/model",
             help="directory of model for saving checkpoint",
         )
 
@@ -355,7 +355,7 @@ def use_default(default_arg):
         )
         parser.add_argument(
             "--model-dir",
-            default="./saved-models",
+            default="./data/model",
             help="directory of model for saving checkpoint",
         )
         parser.add_argument(
@@ -461,7 +461,7 @@ def use_default(default_arg):
         )
         parser.add_argument(
             "--model-dir",
-            default="./saved-models",
+            default="./data/model",
             help="directory of model for saving checkpoint",
         )
 

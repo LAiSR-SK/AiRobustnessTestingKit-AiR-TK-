@@ -7,7 +7,7 @@ import time
 
 import numpy as np
 import torch.optim as optim
-from models.wideresnet import *
+from adversarial_training_toolkit.model import WideResNet
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms

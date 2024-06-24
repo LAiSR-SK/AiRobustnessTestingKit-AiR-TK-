@@ -6,6 +6,7 @@ __pycache__
 data/download/*
 !data/download/.gitkeep
 data/model/*.pt
+data/model/*.tar
 
 # log files
 log/*.txt

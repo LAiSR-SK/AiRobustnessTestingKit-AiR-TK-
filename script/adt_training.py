@@ -2,6 +2,17 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 from __future__ import print_function
 
+import argparse
+import copy
+import os
+import time
+
+import torch
+from adversarial_training_toolkit.loss import adt_loss
+from adversarial_training_toolkit.model import WideResNet
+from helper_functions import adjust_learning_rate, load_data, robust_eval
+from torch import optim
+
 parser = argparse.ArgumentParser(
     description="PyTorch Adversarial Training Framework: ADT"
 )
@@ -53,7 +64,7 @@ parser.add_argument(
 )
 parser.add_argument(
     "--model-dir",
-    default="./saved-models",
+    default="./data/model",
     help="directory of model for saving checkpoint",
 )
 parser.add_argument(
@@ -135,7 +146,7 @@ def main_adt(ds_name, mod_name="wideres34"):
     """
 
     # Set up file for printing the output
-    filename = "output/adt-{}-{}-output.txt".format(ds_name, mod_name)
+    filename = "log/adt-{}-{}-output.txt".format(ds_name, mod_name)
     f = open(filename, "a")
 
     # Initialize the desired model
@@ -273,7 +284,7 @@ def main_adt(ds_name, mod_name="wideres34"):
         raise NotImplementedError
     trained_model.load_state_dict(
         torch.load(
-            "saved-models/model-adt-{}-{}-epoch{}.pt".format(
+            "data/model/model-adt-{}-{}-epoch{}.pt".format(
                 ds_name, mod_name, args.epochs
             )
         )

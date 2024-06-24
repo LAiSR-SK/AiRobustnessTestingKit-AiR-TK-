@@ -41,7 +41,7 @@ parser.add_argument(
     help="adv_mode (feature_scatter)",
 )
 parser.add_argument(
-    "--model_dir", default="\saved-models", type=str, help="model path"
+    "--model_dir", default="\data\model", type=str, help="model path"
 )
 parser.add_argument(
     "--init_model_pass",
@@ -190,7 +190,7 @@ def train_fun(epoch, net, trainloader, optimizer):
         torch.save(state, f_path)
         torch.save(
             net.state_dict(),
-            "saved-models/feature-attack-epoch{}.pt".format(epoch),
+            "data/model/feature-attack-epoch{}.pt".format(epoch),
         )
         print("Epoch " + str(epoch) + " saved")
 

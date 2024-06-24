@@ -310,5 +310,5 @@ if __name__ == "__main__":
         "cifar10",
         "wideres34swa",
         "tests/adt-va-cifar10-every9-epoch82-full-results.txt",
-        "saved-models/adt-va-every9/swa-model-adt-va-cifar10-wideres34-epoch82.pt",
+        "data/model/adt-va-every9/swa-model-adt-va-cifar10-wideres34-epoch82.pt",
     )
