@@ -111,43 +111,68 @@ class Attack(object):
 
     @wrapper_method
     def set_normalization_used(self, mean, std):
+        """This function sets the normalization parameters (mean and standard deviation) to be used for normalizing inputs.
+        The parameters are stored in a dictionary and reshaped to match the input tensor's shape for broadcasting.
+
+
+        :param mean: The mean values for each channel.
+        :param std: The standard deviation values for each channel.
+        """
         self.normalization_used = {}
         n_channels = len(mean)
         mean = torch.tensor(mean).reshape(1, n_channels, 1, 1)
         std = torch.tensor(std).reshape(1, n_channels, 1, 1)
         self.normalization_used["mean"] = mean
         self.normalization_used["std"] = std
-        self._set_normalization_applied(True)
+        self._set_normalization_applied(True)   
 
     def normalize(self, inputs):
+        """This function normalizes the input tensor using the previously set mean and standard deviation.
+        The normalization is performed channel-wise.
+
+        :param inputs: The input tensor to be normalized.
+        :param torch.Tensor: The normalized input tensor.
+        """
         mean = self.normalization_used["mean"].to(inputs.device)
         std = self.normalization_used["std"].to(inputs.device)
         return (inputs - mean) / std
 
     def inverse_normalize(self, inputs):
+        """This function performs the inverse operation of the normalize function.
+        It takes a normalized tensor and transforms it back to its original state using the set mean and standard deviation.
+
+        :param inputs: The input tensor to be inverse normalized.
+
+        :return torch.Tensor: The inverse normalized input tensor.
+        """
         mean = self.normalization_used["mean"].to(inputs.device)
         std = self.normalization_used["std"].to(inputs.device)
         return inputs * std + mean
 
     def get_mode(self):
-        r"""
-        Get attack mode.
+        """Get attack mode."""
 
-        """
         return self.attack_mode
 
     @wrapper_method
     def set_mode_default(self):
-        r"""
-        Set attack mode as default mode.
-
-        """
+        """Set attack mode as default mode."""
         self.attack_mode = "default"
         self.targeted = False
         print("Attack mode is changed to 'default.'")
 
     @wrapper_method
     def _set_mode_targeted(self, mode, quiet):
+        """This function sets the attack mode to 'targeted' if it is supported. 
+        If the targeted mode is not supported, it raises a ValueError. 
+        It also sets the 'targeted' attribute to True.
+
+        :param mode: The attack mode to be set.
+        :param quiet: If False, the function will print a message indicating the change in attack mode.
+
+        :raise ValueError: If the targeted mode is not supported.
+
+        """
         if "targeted" not in self.supported_mode:
             raise ValueError("Targeted mode is not supported.")
         self.targeted = True
@@ -157,40 +182,32 @@ class Attack(object):
 
     @wrapper_method
     def set_mode_targeted_by_function(self, target_map_function, quiet=False):
-        r"""
-        Set attack mode as targeted.
+        """Set attack mode as targeted.
 
-        Arguments:
-            target_map_function (function): Label mapping function.
+        :param target_map_function: Label mapping function.
                 e.g. lambda inputs, labels:(labels+1)%10.
                 None for using input labels as targeted labels. (Default)
-            quiet (bool): Display information message or not. (Default: False)
-
+        :param quiet: Display information message or not. (Default: False)
         """
         self._set_mode_targeted("targeted(custom)", quiet)
         self._target_map_function = target_map_function
 
     @wrapper_method
     def set_mode_targeted_random(self, quiet=False):
-        r"""
-        Set attack mode as targeted with random labels.
+        """Set attack mode as targeted with random labels.
 
-        Arguments:
-            quiet (bool): Display information message or not. (Default: False)
-
+        :param quiet: Display information message or not. (Default: False)
         """
+
         self._set_mode_targeted("targeted(random)", quiet)
         self._target_map_function = self.get_random_target_label
 
     @wrapper_method
     def set_mode_targeted_least_likely(self, kth_min=1, quiet=False):
-        r"""
-        Set attack mode as targeted with least likely labels.
+        """Set attack mode as targeted with least likely labels.
 
-        Arguments:
-            kth_min (str): label with the k-th smallest probability used as target labels. (Default: 1)
-            num_classses (str): number of classes. (Default: False)
-
+        :param kth_min: label with the k-th smallest probability used as target labels. (Default: 1)
+        :param num_classses: number of classes. (Default: False)
         """
         self._set_mode_targeted("targeted(least-likely)", quiet)
         assert kth_min > 0
@@ -199,11 +216,9 @@ class Attack(object):
 
     @wrapper_method
     def set_mode_targeted_by_label(self, quiet=False):
-        r"""
-        Set attack mode as targeted.
+        """Set attack mode as targeted.
 
-        Arguments:
-            quiet (bool): Display information message or not. (Default: False)
+        :param quiet: Display information message or not. (Default: False)
 
         .. note::
             Use user-supplied labels as target labels.
@@ -215,13 +230,11 @@ class Attack(object):
     def set_model_training_mode(
         self, model_training=False, batchnorm_training=False, dropout_training=False
     ):
-        r"""
-        Set training mode during attack process.
+        """Set training mode during attack process.
 
-        Arguments:
-            model_training (bool): True for using training mode for the entire model during attack process.
-            batchnorm_training (bool): True for using training mode for batchnorms during attack process.
-            dropout_training (bool): True for using training mode for dropouts during attack process.
+        :param model_training: True for using training mode for the entire model during attack process.
+        :param batchnorm_training: True for using training mode for batchnorms during attack process.
+        :param dropout_training: True for using training mode for dropouts during attack process.
 
         .. note::
             For RNN-based models, we cannot calculate gradients with eval mode.
@@ -233,6 +246,14 @@ class Attack(object):
 
     @wrapper_method
     def _change_model_mode(self, given_training):
+        """This function changes the mode of the model based on the 'given_training' flag.
+        If 'given_training' is True, it sets the model to training mode. 
+        Additionally, it iterates over all modules in the model and sets BatchNorm and Dropout layers to evaluation mode 
+        if '_batchnorm_training' and '_dropout_training' flags are False, respectively.
+        If 'given_training' is False, it sets the model to evaluation mode.
+
+        :PARAM given_training (bool): Flag indicating whether the model should be in training mode or not.
+        """
         if self._model_training:
             self.model.train()
             for _, m in self.model.named_modules():
@@ -242,11 +263,17 @@ class Attack(object):
                 if not self._dropout_training:
                     if "Dropout" in m.__class__.__name__:
                         m = m.eval()
-        else:
-            self.model.eval()
+            else:
+                self.model.eval()
 
     @wrapper_method
     def _recover_model_mode(self, given_training):
+        """This function recovers the mode of the model based on the 'given_training' flag.
+        If 'given_training' is True, it sets the model back to training mode. 
+        This function is typically used to revert the model back to its original mode after certain operations.
+
+        :param given_training (bool): Flag indicating whether the model should be in training mode or not.
+        """
         if given_training:
             self.model.train()
 
@@ -260,17 +287,14 @@ class Attack(object):
         save_clean_inputs=False,
         save_type="float",
     ):
-        r"""
-        Save adversarial inputs as torch.tensor from given torch.utils.data.DataLoader.
+        """Save adversarial inputs as torch.tensor from given torch.utils.data.DataLoader.
 
-        Arguments:
-            save_path (str): save_path.
-            data_loader (torch.utils.data.DataLoader): data loader.
-            verbose (bool): True for displaying detailed information. (Default: True)
-            return_verbose (bool): True for returning detailed information. (Default: False)
-            save_predictions (bool): True for saving predicted labels (Default: False)
-            save_clean_inputs (bool): True for saving clean inputs (Default: False)
-
+        :param save_path: save_path.
+        :param data_loader: data loader.
+        :param verbose: True for displaying detailed information. (Default: True)
+        :param return_verbose: True for returning detailed information. (Default: False)
+        :param save_predictions: True for saving predicted labels (Default: False)
+        :param save_clean_inputs: True for saving clean inputs (Default: False)
         """
         if save_path is not None:
             adv_input_list = []
@@ -377,9 +401,7 @@ class Attack(object):
 
     @staticmethod
     def to_type(inputs, type):
-        r"""
-        Return inputs as int if float is given.
-        """
+        """Return inputs as int if float is given."""
         if type == "int":
             if isinstance(inputs, torch.FloatTensor) or isinstance(
                 inputs, torch.cuda.FloatTensor
@@ -396,6 +418,15 @@ class Attack(object):
 
     @staticmethod
     def _save_print(progress, rob_acc, l2, elapsed_time, end):
+        """This function prints the progress of a certain operation, robust accuracy, L2 norm, and elapsed time per iteration.
+        It's typically used for logging purposes during training or testing of models.
+
+        :param progress: The progress of the operation in percentage.
+        :param rob_acc: The robust accuracy of the model in percentage.
+        :param l2: The L2 norm of the model parameters or gradients.
+        :param elapsed_time: The time elapsed per iteration in seconds.
+        :param end: The end character to be used in the print function. Typically '\n' for a new line or '\r' to overwrite the current line.
+        """
         print(
             "- Save progress: %2.2f %% / Robust accuracy: %2.2f %% / L2: %1.5f (%2.3f it/s) \t"
             % (progress, rob_acc, l2, elapsed_time),
@@ -445,6 +476,18 @@ class Attack(object):
 
     @torch.no_grad()
     def get_output_with_eval_nograd(self, inputs):
+        """This function loads a saved dataset from a given path and returns a DataLoader object.
+        The function also supports optional normalization and loading of additional data such as predictions and clean inputs.
+
+        :param load_path: The path to the saved dataset.
+        :param batch_size: The batch size for the DataLoader. Defaults to 128.
+        :param shuffle: Whether to shuffle the data. Defaults to False.
+        :param normalize: A dictionary containing 'mean' and 'std' for normalization. Defaults to None.
+        :param load_predictions: Whether to load predictions. Defaults to False.
+        :param load_clean_inputs: Whether to load clean inputs. Defaults to False.
+
+        :return DataLoader: A DataLoader object containing the loaded data.
+    """
         given_training = self.model.training
         if given_training:
             self.model.eval()
@@ -454,9 +497,9 @@ class Attack(object):
         return outputs
 
     def get_target_label(self, inputs, labels=None):
-        r"""
-        Function for changing the attack mode.
-        Return input labels.
+        """Function for changing the attack mode.
+
+        :return  input labels.
         """
         if self._target_map_function is None:
             raise ValueError(
@@ -470,6 +513,15 @@ class Attack(object):
 
     @torch.no_grad()
     def get_least_likely_label(self, inputs, labels=None):
+        """This function computes the least likely label for each input sample based on the model's output.
+        If labels are not provided, it uses the model's predictions as labels.
+        It's typically used in adversarial attack scenarios where the least likely label is targeted.
+
+        :param inputs: The input samples.
+        :param labels: The true labels of the input samples. Defaults to None.
+
+        :return torch.Tensor: The least likely labels for each input sample.
+        """
         outputs = self.get_output_with_eval_nograd(inputs)
         if labels is None:
             _, labels = torch.max(outputs, dim=1)
@@ -486,6 +538,16 @@ class Attack(object):
 
     @torch.no_grad()
     def get_random_target_label(self, inputs, labels=None):
+        """
+        This function computes a random target label for each input sample that is different from its true label.
+        If labels are not provided, it uses the model's predictions as labels.
+        It's typically used in adversarial attack scenarios where a random label is targeted.
+
+        :param inputs: The input samples.
+        :param labels: The true labels of the input samples. Defaults to None.
+
+        :return torch.Tensor: The random target labels for each input sample.
+    """
         outputs = self.get_output_with_eval_nograd(inputs)
         if labels is None:
             _, labels = torch.max(outputs, dim=1)
@@ -501,6 +563,23 @@ class Attack(object):
         return target_labels.long().to(self.device)
 
     def __call__(self, inputs, labels=None, *args, **kwargs):
+        """This function is the main entry point for this class. It's called when an instance of the class is invoked like a function.
+        It performs the following steps:
+        1. Saves the current training mode of the model.
+        2. Changes the model's mode based on the saved training mode.
+        3. If normalization has been applied, it inverses the normalization on the inputs and sets the '_normalization_applied' flag to False.
+        4. Calls the 'forward' method to perform the main operation of the class (e.g., generating adversarial examples).
+        5. If normalization has been applied, it normalizes the adversarial inputs and sets the '_normalization_applied' flag back to True.
+        6. Recovers the model's mode to its original state.
+        7. Returns the adversarial inputs.
+
+        :param inputs: The input samples.
+        :param labels: The true labels of the input samples. Defaults to None.
+        :param *args: Variable length argument list.
+        :param **kwargs: Arbitrary keyword arguments.
+
+        :return torch.Tensor: The adversarial inputs.
+        """
         given_training = self.model.training
         self._change_model_mode(given_training)
 
@@ -522,6 +601,13 @@ class Attack(object):
         return adv_inputs
 
     def __repr__(self):
+        """This function provides a string representation of the object. 
+        It's typically used for debugging and logging purposes.
+        The function copies the object's attributes dictionary, removes certain keys, 
+        and then formats the remaining items into a string.
+
+        :return A string representation of the object.
+        """
         info = self.__dict__.copy()
 
         del_keys = ["model", "attack", "supported_mode"]
@@ -546,11 +632,18 @@ class Attack(object):
         )
 
     def __setattr__(self, name, value):
+        """This function overrides the default behavior of the 'setattr' function. 
+        It's called when an attribute value is set. 
+        Besides setting the attribute value, it also updates the '_attacks' dictionary 
+        if the value is an instance of the 'Attack' class or contains instances of the 'Attack' class.
+        :param name: The name of the attribute.
+        :param value: The value of the attribute.
+        """
         object.__setattr__(self, name, value)
 
         attacks = self.__dict__.get("_attacks")
 
-        # Get all items in iterable items.
+        # Define a helper function to get all values in iterable items
         def get_all_values(items, stack=[]):
             if items not in stack:
                 stack.append(items)
@@ -565,7 +658,8 @@ class Attack(object):
             else:
                 if isinstance(items, Attack):
                     yield items
-
+                    
+        # For each 'Attack' instance in the value, add it to the '_attacks' dictionary
         for num, value in enumerate(get_all_values(value)):
             attacks[name + "." + str(num)] = value
             for subname, subvalue in value.__dict__.get("_attacks").items():
