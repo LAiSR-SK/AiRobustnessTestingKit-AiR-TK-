@@ -1,0 +1,8 @@
+{
+    "python.analysis.extraPaths": [
+        "./src/adversarial_training_toolkit",
+        "./script/adversarial_training_toolkit",
+        "./src/adversarial_training_toolkit",
+        "./src/adversarial_training_toolkit"
+    ]
+}
