@@ -14,7 +14,7 @@ from adversarial_training_toolkit.model import (
     WideResNet,
 )
 from autoattack import AutoAttack
-from helper_functions import (
+from adversarial_training_toolkit.helper_functions import (
     cw_whitebox_eval,
     fgsm_whitebox_eval,
     load_data,

@@ -16,7 +16,7 @@ from adversarial_training_toolkit.model import (
     ResNet152,
     WideResNet,
 )
-from helper_functions import (
+from adversarial_training_toolkit.helper_functions import (
     adjust_learning_rate,
     eval_clean,
     load_data,

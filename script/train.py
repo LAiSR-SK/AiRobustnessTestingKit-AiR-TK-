@@ -9,7 +9,7 @@ import time
 import torch
 from adversarial_training_toolkit.loss import adt_va_loss
 from adversarial_training_toolkit.util import get_model
-from helper_functions import (
+from adversarial_training_toolkit.helper_functions import (
     adjust_learning_rate,
     class_define_attacks,
     eval_clean,
