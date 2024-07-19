@@ -1,7 +1,10 @@
+# (c) 2023 Harry24k
+# This code is licensed under the MIT license (see LICENSE.md).
 import torch
 import torch.nn as nn
 
 from adversarial_training_toolkit.attack.MAIR_attack import Attack
+
 
 class EOTPGD(Attack):
     """Comment on "Adv-BNN: Improved Adversarial Defense through Robust Bayesian Neural Network"
@@ -14,7 +17,7 @@ class EOTPGD(Attack):
     :param eps: (float): maximum perturbation. (Default: 8/255)
     :param alpha: (float): step size. (Default: 2/255)
     :param steps: (int): number of steps. (Default: 10)
-    :param eot_iter (int) : number of models to estimate the mean gradient. (Default: 2) 
+    :param eot_iter (int) : number of models to estimate the mean gradient. (Default: 2)
         useful when the model includes some form of randomness, such as dropout or data augmentation
 
     Shape:
@@ -25,13 +28,13 @@ class EOTPGD(Attack):
     """
 
     def __init__(
-        self, 
-        model: nn.Module, 
-        eps: float = 8 / 255, 
-        alpha: float = 2 / 255, 
-        steps: int = 10, 
-        eot_iter: int = 2, 
-        random_start: bool = True
+        self,
+        model: nn.Module,
+        eps: float = 8 / 255,
+        alpha: float = 2 / 255,
+        steps: int = 10,
+        eot_iter: int = 2,
+        random_start: bool = True,
     ):
         super().__init__("EOTPGD", model)
         self.eps = eps
@@ -42,8 +45,7 @@ class EOTPGD(Attack):
         self.supported_mode = ["default", "targeted"]
 
     def forward(self, images, labels):
-        """Overridden of the base.
-        """
+        """Overridden of the base."""
 
         images = images.clone().detach().to(self.device)
         labels = labels.clone().detach().to(self.device)
@@ -82,7 +84,9 @@ class EOTPGD(Attack):
 
             # (grad/self.eot_iter).sign() == grad.sign()
             adv_images = adv_images.detach() + self.alpha * grad.sign()
-            delta = torch.clamp(adv_images - images, min=-self.eps, max=self.eps)
+            delta = torch.clamp(
+                adv_images - images, min=-self.eps, max=self.eps
+            )
             adv_images = torch.clamp(images + delta, min=0, max=1).detach()
 
         return adv_images

@@ -3,7 +3,6 @@
 import torch
 from torch import nn
 from torch.autograd import Variable
-from torch.nn import functional as F
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 

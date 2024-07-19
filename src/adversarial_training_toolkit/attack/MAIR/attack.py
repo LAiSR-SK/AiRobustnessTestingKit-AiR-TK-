@@ -1,13 +1,15 @@
+# (c) 2023 Harry24k
+# This code is licensed under the MIT license (see LICENSE.md).
+"""
+This file has been taken from https://github.com/Harry24k/MAIR/blob/main/mair/attacks/attack.py#L18
+"""
+
 import time
 from collections import OrderedDict
 
 import torch
 from torch.utils.data import DataLoader, TensorDataset
 
-"""
-This file has been taken from https://github.com/Harry24k/MAIR/blob/main/mair/attacks/attack.py#L18
-
-"""
 
 def wrapper_method(func):
     # allows you to add extra functionality to an existing function or method
@@ -19,7 +21,8 @@ def wrapper_method(func):
 
     return wrapper_func
 
-class Attack(object):
+
+class Attack:
     """Base class for MAIR's attacks.
 
     .. note::
@@ -31,19 +34,21 @@ class Attack(object):
     def __init__(self, name: str, model: torch.nn.Module):
         """Initializes internal attack state.
 
-            :param name: Name of the attack.
-            :param model: Model to attack.
+        :param name: Name of the attack.
+        :param model: Model to attack.
         """
 
         self.attack: str = name
         self._attacks: OrderedDict = OrderedDict()
         self.set_model(model)
-        
+
         try:
             self.device: torch.device = next(model.parameters()).device
         except Exception:
             self.device: torch.device = None
-            print("Failed to set device automatically, please try set_device() manual.")
+            print(
+                "Failed to set device automatically, please try set_device() manual."
+            )
 
         # Controls attack mode.
         self.attack_mode: str = "default"
@@ -62,7 +67,13 @@ class Attack(object):
         self._batchnorm_training: bool = False
         self._dropout_training: bool = False
 
-    def forward(self, inputs: torch.Tensor, labels: torch.Tensor = None, *args, **kwargs):
+    def forward(
+        self,
+        inputs: torch.Tensor,
+        labels: torch.Tensor = None,
+        *args,
+        **kwargs,
+    ):
         """Defines the computation performed at every call.
         Should be overridden by all subclasses.
         """
@@ -75,7 +86,13 @@ class Attack(object):
         self.model: torch.nn.Module = model
         self.model_name: str = model.__class__.__name__
 
-    def get_logits(self, inputs: torch.Tensor, labels: torch.Tensor = None, *args, **kwargs):
+    def get_logits(
+        self,
+        inputs: torch.Tensor,
+        labels: torch.Tensor = None,
+        *args,
+        **kwargs,
+    ):
         """Gets the logits from the model."""
 
         if self._normalization_applied is False:
@@ -98,7 +115,7 @@ class Attack(object):
     @wrapper_method
     def _set_rmodel_normalization_used(self, model: torch.nn.Module):
         """Sets attack normalization for MAIR [https://github.com/Harry24k/MAIR]."""
-        
+
         mean = getattr(model, "mean", None)
         std = getattr(model, "std", None)
         if (mean is not None) and (std is not None):
@@ -124,7 +141,7 @@ class Attack(object):
         std = torch.tensor(std).reshape(1, n_channels, 1, 1)
         self.normalization_used["mean"] = mean
         self.normalization_used["std"] = std
-        self._set_normalization_applied(True)   
+        self._set_normalization_applied(True)
 
     def normalize(self, inputs):
         """This function normalizes the input tensor using the previously set mean and standard deviation.
@@ -163,8 +180,8 @@ class Attack(object):
 
     @wrapper_method
     def _set_mode_targeted(self, mode, quiet):
-        """This function sets the attack mode to 'targeted' if it is supported. 
-        If the targeted mode is not supported, it raises a ValueError. 
+        """This function sets the attack mode to 'targeted' if it is supported.
+        If the targeted mode is not supported, it raises a ValueError.
         It also sets the 'targeted' attribute to True.
 
         :param mode: The attack mode to be set.
@@ -228,7 +245,10 @@ class Attack(object):
 
     @wrapper_method
     def set_model_training_mode(
-        self, model_training=False, batchnorm_training=False, dropout_training=False
+        self,
+        model_training=False,
+        batchnorm_training=False,
+        dropout_training=False,
     ):
         """Set training mode during attack process.
 
@@ -247,8 +267,8 @@ class Attack(object):
     @wrapper_method
     def _change_model_mode(self, given_training):
         """This function changes the mode of the model based on the 'given_training' flag.
-        If 'given_training' is True, it sets the model to training mode. 
-        Additionally, it iterates over all modules in the model and sets BatchNorm and Dropout layers to evaluation mode 
+        If 'given_training' is True, it sets the model to training mode.
+        Additionally, it iterates over all modules in the model and sets BatchNorm and Dropout layers to evaluation mode
         if '_batchnorm_training' and '_dropout_training' flags are False, respectively.
         If 'given_training' is False, it sets the model to evaluation mode.
 
@@ -269,7 +289,7 @@ class Attack(object):
     @wrapper_method
     def _recover_model_mode(self, given_training):
         """This function recovers the mode of the model based on the 'given_training' flag.
-        If 'given_training' is True, it sets the model back to training mode. 
+        If 'given_training' is True, it sets the model back to training mode.
         This function is typically used to revert the model back to its original mode after certain operations.
 
         :param given_training (bool): Flag indicating whether the model should be in training mode or not.
@@ -413,7 +433,9 @@ class Attack(object):
             ):
                 return inputs.float() / 255
         else:
-            raise ValueError(type + " is not a valid type. [Options: float, int]")
+            raise ValueError(
+                type + " is not a valid type. [Options: float, int]"
+            )
         return inputs
 
     @staticmethod
@@ -468,7 +490,9 @@ class Attack(object):
                 ) / std  # nopep8
 
         adv_data = TensorDataset(*[save_dict[key] for key in keys])
-        adv_loader = DataLoader(adv_data, batch_size=batch_size, shuffle=shuffle)
+        adv_loader = DataLoader(
+            adv_data, batch_size=batch_size, shuffle=shuffle
+        )
         print(
             "Data is loaded in the following order: [%s]" % (", ".join(keys))
         )  # nopep8
@@ -487,7 +511,7 @@ class Attack(object):
         :param load_clean_inputs: Whether to load clean inputs. Defaults to False.
 
         :return DataLoader: A DataLoader object containing the loaded data.
-    """
+        """
         given_training = self.model.training
         if given_training:
             self.model.eval()
@@ -547,7 +571,7 @@ class Attack(object):
         :param labels: The true labels of the input samples. Defaults to None.
 
         :return torch.Tensor: The random target labels for each input sample.
-    """
+        """
         outputs = self.get_output_with_eval_nograd(inputs)
         if labels is None:
             _, labels = torch.max(outputs, dim=1)
@@ -601,9 +625,9 @@ class Attack(object):
         return adv_inputs
 
     def __repr__(self):
-        """This function provides a string representation of the object. 
+        """This function provides a string representation of the object.
         It's typically used for debugging and logging purposes.
-        The function copies the object's attributes dictionary, removes certain keys, 
+        The function copies the object's attributes dictionary, removes certain keys,
         and then formats the remaining items into a string.
 
         :return A string representation of the object.
@@ -627,14 +651,14 @@ class Attack(object):
         return (
             self.attack
             + "("
-            + ", ".join("{}={}".format(key, val) for key, val in info.items())
+            + ", ".join(f"{key}={val}" for key, val in info.items())
             + ")"
         )
 
     def __setattr__(self, name, value):
-        """This function overrides the default behavior of the 'setattr' function. 
-        It's called when an attribute value is set. 
-        Besides setting the attribute value, it also updates the '_attacks' dictionary 
+        """This function overrides the default behavior of the 'setattr' function.
+        It's called when an attribute value is set.
+        Besides setting the attribute value, it also updates the '_attacks' dictionary
         if the value is an instance of the 'Attack' class or contains instances of the 'Attack' class.
         :param name: The name of the attribute.
         :param value: The value of the attribute.
@@ -658,10 +682,9 @@ class Attack(object):
             else:
                 if isinstance(items, Attack):
                     yield items
-                    
+
         # For each 'Attack' instance in the value, add it to the '_attacks' dictionary
         for num, value in enumerate(get_all_values(value)):
             attacks[name + "." + str(num)] = value
             for subname, subvalue in value.__dict__.get("_attacks").items():
                 attacks[name + "." + subname] = subvalue
-
