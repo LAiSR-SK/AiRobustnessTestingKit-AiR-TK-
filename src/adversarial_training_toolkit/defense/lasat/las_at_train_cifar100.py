@@ -25,7 +25,10 @@ from adversarial_training_toolkit.defense.lasat.las_at_cifar10_utils import (
 
 # from CIFAR100_models import *
 from adversarial_training_toolkit.model import ResNet18, WideResNet
-from helper_functions import evaluate_pgd, evaluate_standard
+from adversarial_training_toolkit.helper_functions import (
+    evaluate_pgd,
+    evaluate_standard,
+)
 from torch import nn, optim
 from torch.autograd import Variable
 from torch.distributions import Categorical

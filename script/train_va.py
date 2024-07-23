@@ -10,7 +10,7 @@ import torch
 from adversarial_training_toolkit.attack import create_attack
 from adversarial_training_toolkit.loss import accuracy, standard_loss
 from autoattack import AutoAttack
-from helper_functions import (
+from adversarial_training_toolkit.helper_functions import (
     adjust_learning_rate,
     cw_whitebox,
     eval_clean,

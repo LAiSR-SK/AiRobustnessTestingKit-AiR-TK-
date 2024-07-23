@@ -21,96 +21,6 @@ from adversarial_training_toolkit.model import (
 from torch.autograd import Variable
 from torchvision import transforms
 
-parser = argparse.ArgumentParser(description="PyTorch VA Adversarial Training")
-parser.add_argument("--dataset", type=str, default="cifar100", help="dataset")
-parser.add_argument(
-    "--model-arch", default="wideres34", help="model architecture to train"
-)
-parser.add_argument(
-    "--batch-size",
-    type=int,
-    default=128,
-    metavar="N",
-    help="input batch size for training (default: 128)",
-)
-parser.add_argument(
-    "--test-batch-size",
-    type=int,
-    default=128,
-    metavar="N",
-    help="input batch size for testing (default: 128)",
-)
-parser.add_argument(
-    "--epochs",
-    type=int,
-    default=140,
-    metavar="N",
-    help="number of epochs to train",
-)
-parser.add_argument(
-    "--warmup",
-    type=int,
-    default=0,
-    metavar="N",
-    help="number of epochs to train with clean data before AT",
-)
-parser.add_argument(
-    "--weight-decay", "--wd", default=2e-4, type=float, metavar="W"
-)
-parser.add_argument(
-    "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
-)
-parser.add_argument(
-    "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
-)
-parser.add_argument(
-    "--no-cuda",
-    action="store_true",
-    default=False,
-    help="disables CUDA training",
-)
-parser.add_argument(
-    "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
-)
-parser.add_argument(
-    "--log-interval",
-    type=int,
-    default=100,
-    metavar="N",
-    help="how many batches to wait before logging training status",
-)
-parser.add_argument(
-    "--model-dir",
-    default="./data/model",
-    help="directory of model for saving checkpoint",
-)
-parser.add_argument(
-    "--save-freq",
-    "-s",
-    default=1,
-    type=int,
-    metavar="N",
-    help="save frequency",
-)
-parser.add_argument(
-    "--lr-schedule",
-    default="decay",
-    help="schedule for adjusting learning rate",
-)
-parser.add_argument(
-    "--epsilon", type=float, default=8.0 / 255.0, help="perturbation"
-)
-parser.add_argument(
-    "--num-steps", type=int, default=20, help="perturb number of steps"
-)
-parser.add_argument(
-    "--step-size", type=float, default=2.0 / 255.0, help="perturb step size"
-)
-parser.add_argument(
-    "--random", default=True, help="random initialization for PGD"
-)
-args = parser.parse_args()
-
 
 def eval_clean(model, device, data_loader, name, ds_name, f):
     """
@@ -520,9 +430,9 @@ def pgd_whitebox_eval(
     X,
     y,
     device,
-    epsilon=args.epsilon,
-    num_steps=args.num_steps,
-    step_size=args.step_size,
+    epsilon=0.031,
+    num_steps=20,
+    step_size=2.0 / 255.0
 ):
     """
     Evaluates the model by perturbing an image using the PGD attack.
@@ -546,13 +456,12 @@ def pgd_whitebox_eval(
     X_pgd = Variable(X.data, requires_grad=True)
 
     # If specified, create random noice between - and + epsilon and add to X_pgd
-    if args.random:
-        random_noise = (
-            torch.FloatTensor(*X_pgd.shape)
-            .uniform_(-epsilon, epsilon)
-            .to(device)
-        )
-        X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
+    random_noise = (
+        torch.FloatTensor(*X_pgd.shape)
+        .uniform_(-epsilon, epsilon)
+        .to(device)
+    )
+    X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
 
     # For each perturbation step
     for _ in range(num_steps):
@@ -586,7 +495,7 @@ def pgd_whitebox_eval(
     return err, err_pgd
 
 
-def fgsm_whitebox_eval(model, X, y, epsilon=args.epsilon):
+def fgsm_whitebox_eval(model, X, y, epsilon=0.031):
     """
     Evaluates the model by perturbing an image using the FGSM attack.
 
@@ -632,9 +541,9 @@ def cw_whitebox_eval(
     X,
     y,
     device,
-    epsilon=args.epsilon,
-    num_steps=args.num_steps,
-    step_size=args.step_size,
+    epsilon=0.031,
+    num_steps=20,
+    step_size=2.0 / 255.0,
 ):
     """
     Evaluates the model by perturbing an image using the CW attack.
@@ -659,13 +568,12 @@ def cw_whitebox_eval(
     X_cw = Variable(X.data, requires_grad=True)
 
     # If specified, create random noice between - and + epsilon and add to X_cw
-    if args.random:
-        random_noise = (
-            torch.FloatTensor(*X_cw.shape)
-            .uniform_(-epsilon, epsilon)
-            .to(device)
-        )
-        X_cw = Variable(X_cw.data + random_noise, requires_grad=True)
+    random_noise = (
+        torch.FloatTensor(*X_cw.shape)
+        .uniform_(-epsilon, epsilon)
+        .to(device)
+    )
+    X_cw = Variable(X_cw.data + random_noise, requires_grad=True)
 
     for _ in range(num_steps):
         # Create the SGD optimizer and zero the gradients
@@ -697,9 +605,9 @@ def mim_whitebox_eval(
     X,
     y,
     device,
-    epsilon=args.epsilon,
-    num_steps=args.num_steps,
-    step_size=args.step_size,
+    epsilon=0.031,
+    num_steps=20,
+    step_size=0.031,
     decay_factor=1.0,
 ):
     """
@@ -724,14 +632,11 @@ def mim_whitebox_eval(
     # Create X_mim basis by duplicating X as a variable
     X_mim = Variable(X.data, requires_grad=True)
 
-    # If specified, create random noice between - and + epsilon and add to X_cw
-    if args.random:
-        random_noise = (
-            torch.FloatTensor(*X_mim.shape)
-            .uniform_(-epsilon, epsilon)
-            .to(device)
-        )
-        X_mim = Variable(X_mim.data + random_noise, requires_grad=True)
+    # create random noise between - and + epsilon and add to X_cw
+    random_noise = (
+        torch.FloatTensor(*X_mim.shape).uniform_(-epsilon, epsilon).to(device)
+    )
+    X_mim = Variable(X_mim.data + random_noise, requires_grad=True)
 
     # Set up tensor to hold previous gradients
     previous_grad = torch.zeros_like(X.data)
@@ -772,9 +677,9 @@ def cw_whitebox(
     y,
     device,
     dataset,
-    epsilon=args.epsilon,
-    num_steps=args.num_steps,
-    step_size=args.step_size,
+    epsilon=0.031,
+    num_steps=20,
+    step_size=2.0 / 255.0
 ):
     """
     Attacks the specified image X using the CW attack and returns the adversarial example
@@ -794,13 +699,12 @@ def cw_whitebox(
     X_pgd = Variable(X.data, requires_grad=True)
 
     # If adding random, create random noice between - and + epsilon and add to X_pgd
-    if args.random:
-        random_noise = (
-            torch.FloatTensor(*X_pgd.shape)
-            .uniform_(-epsilon, epsilon)
-            .to(device)
-        )
-        X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
+    random_noise = (
+        torch.FloatTensor(*X_pgd.shape)
+        .uniform_(-epsilon, epsilon)
+        .to(device)
+    )
+    X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
 
     # For each perturbation step:
     for _ in range(num_steps):
@@ -837,9 +741,9 @@ def mim_whitebox(
     X,
     y,
     device,
-    epsilon=args.epsilon,
-    num_steps=args.num_steps,
-    step_size=args.step_size,
+    epsilon=0.031,
+    num_steps=20,
+    step_size=2.0 / 255.0,
     decay_factor=1.0,
 ):
     """
@@ -861,13 +765,12 @@ def mim_whitebox(
     X_pgd = Variable(X.data, requires_grad=True)
 
     # If adding random, create random noice between - and + epsilon and add to X_pgd
-    if args.random:
-        random_noise = (
-            torch.FloatTensor(*X_pgd.shape)
-            .uniform_(-epsilon, epsilon)
-            .to(device)
-        )
-        X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
+    random_noise = (
+        torch.FloatTensor(*X_pgd.shape)
+        .uniform_(-epsilon, epsilon)
+        .to(device)
+    )
+    X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
 
     # Set the previous gradient to a tensor of 0s in the shape of X
     previous_grad = torch.zeros_like(X.data)

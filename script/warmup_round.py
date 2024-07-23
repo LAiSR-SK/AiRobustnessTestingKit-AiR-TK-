@@ -1,21 +1,111 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 
+import argparse
 import os
 import time
 
 import torch
 from adversarial_training_toolkit.loss import standard_loss
 from adversarial_training_toolkit.util import get_model
-from helper_functions import (
+from adversarial_training_toolkit.helper_functions import (
     adjust_learning_rate,
-    args,
     eval_clean,
     load_data,
     robust_eval,
 )
-from torch import optim
+from torch import nn, optim
 
+parser = argparse.ArgumentParser(description="PyTorch VA Adversarial Training")
+parser.add_argument("--dataset", type=str, default="cifar100", help="dataset")
+parser.add_argument(
+    "--model-arch", default="wideres34", help="model architecture to train"
+)
+parser.add_argument(
+    "--batch-size",
+    type=int,
+    default=128,
+    metavar="N",
+    help="input batch size for training (default: 128)",
+)
+parser.add_argument(
+    "--test-batch-size",
+    type=int,
+    default=128,
+    metavar="N",
+    help="input batch size for testing (default: 128)",
+)
+parser.add_argument(
+    "--epochs",
+    type=int,
+    default=140,
+    metavar="N",
+    help="number of epochs to train",
+)
+parser.add_argument(
+    "--warmup",
+    type=int,
+    default=0,
+    metavar="N",
+    help="number of epochs to train with clean data before AT",
+)
+parser.add_argument(
+    "--weight-decay", "--wd", default=2e-4, type=float, metavar="W"
+)
+parser.add_argument(
+    "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
+)
+parser.add_argument(
+    "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
+)
+parser.add_argument(
+    "--no-cuda",
+    action="store_true",
+    default=False,
+    help="disables CUDA training",
+)
+parser.add_argument(
+    "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
+)
+parser.add_argument(
+    "--log-interval",
+    type=int,
+    default=100,
+    metavar="N",
+    help="how many batches to wait before logging training status",
+)
+parser.add_argument(
+    "--model-dir",
+    default="./data/model",
+    help="directory of model for saving checkpoint",
+)
+parser.add_argument(
+    "--save-freq",
+    "-s",
+    default=1,
+    type=int,
+    metavar="N",
+    help="save frequency",
+)
+parser.add_argument(
+    "--lr-schedule",
+    default="decay",
+    help="schedule for adjusting learning rate",
+)
+parser.add_argument(
+    "--epsilon", type=float, default=8.0 / 255.0, help="perturbation"
+)
+parser.add_argument(
+    "--num-steps", type=int, default=20, help="perturb number of steps"
+)
+parser.add_argument(
+    "--step-size", type=float, default=2.0 / 255.0, help="perturb step size"
+)
+parser.add_argument(
+    "--random", default=True, help="random initialization for PGD"
+)
+
+args = parser.parse_args()
 model_dir = args.model_dir
 if not os.path.exists(model_dir):
     os.makedirs(model_dir)

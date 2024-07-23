@@ -17,8 +17,7 @@ from adversarial_training_toolkit.model import (
     WideResNet,
 )
 
-# TODO(Ezuharad): This needs to be fixed
-from helper_functions import (
+from adversarial_training_toolkit.helper_functions import (
     adjust_learning_rate,
     eval_clean,
     load_data,
