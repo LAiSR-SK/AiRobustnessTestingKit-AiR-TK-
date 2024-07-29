@@ -1,15 +1,17 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 
-import argparse
 import copy
 import os
 import time
+from collections import namedtuple
 
 import torch
-from adversarial_training_toolkit.attack import create_attack
-from adversarial_training_toolkit.loss import accuracy, standard_loss
 from autoattack import AutoAttack
+from torch import nn, optim
+from warmup_round import main_warmup
+
+from adversarial_training_toolkit.attack import create_attack
 from adversarial_training_toolkit.helper_functions import (
     adjust_learning_rate,
     cw_whitebox,
@@ -19,8 +21,7 @@ from adversarial_training_toolkit.helper_functions import (
     mim_whitebox,
     robust_eval,
 )
-from torch import nn, optim
-from warmup_round import main_warmup
+from adversarial_training_toolkit.loss import accuracy, standard_loss
 
 """Trains a model using the Various Attacks method.
 
@@ -28,89 +29,19 @@ Models: ResNet-18, ResNet-34, ResNet-50, ResNet-101, ResNet-152, WideResNet-34
 
 Datasets: CIFAR-10, CIFAR-100"""
 
-parser = argparse.ArgumentParser(
-    description="PyTorch CIFAR TRADES Adversarial Training"
-)
-parser.add_argument(
-    "--batch-size",
-    type=int,
-    default=128,
-    metavar="N",
-    help="input batch size for training (default: 128)",
-)
-parser.add_argument(
-    "--test-batch-size",
-    type=int,
-    default=128,
-    metavar="N",
-    help="input batch size for testing (default: 128)",
-)
-parser.add_argument(
-    "--epochs",
-    type=int,
-    default=200,
-    metavar="N",
-    help="number of epochs to train",
-)
-parser.add_argument(
-    "--weight-decay", "--wd", default=2e-4, type=float, metavar="W"
-)
-parser.add_argument(
-    "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
-)
-parser.add_argument(
-    "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
-)
-parser.add_argument(
-    "--no-cuda",
-    action="store_true",
-    default=False,
-    help="disables CUDA training",
-)
-parser.add_argument(
-    "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
-)
-parser.add_argument(
-    "--log-interval",
-    type=int,
-    default=100,
-    metavar="N",
-    help="how many batches to wait before logging training status",
-)
-parser.add_argument(
-    "--model-dir",
-    default="./data/model",
-    help="directory of model for saving checkpoint",
-)
-parser.add_argument(
-    "--save-freq",
-    "-s",
-    default=1,
-    type=int,
-    metavar="N",
-    help="save frequency",
-)
-parser.add_argument(
-    "--swa-warmup", default=50, type=int, metavar="N", help="save frequency"
-)
-parser.add_argument(
-    "--swa", action="store_true", default=True, help="disables CUDA training"
-)
-parser.add_argument(
-    "--lr-schedule",
-    default="decay",
-    help="schedule for adjusting learning rate",
-)
-args = parser.parse_args()
+
+class VaTraining:
+    def __init__(self, ds_name: str, model_name: str, batch_size: int = 128, epochs: int = 200, weight_decay: float = 2e-4, lr: float = 0.1, momentum: float = 0.9, seed: int = 1, log_interval: int = 1, model_dir: str = "./data/model", save_freq: int = 1, swa_warmup: int = 50, swa: bool = True, lr_schedule: str = "decay") -> None:
+        ArgsPrototype = namedtuple("ArgsPrototype", ["batch_size", "test_batch_size", "epochs", "weight_decay", "lr", "momentum", "no_cuda", "seed", "log_interval", "model_dir", "save_freq", "swa_warmup", "swa", "lr_schedule"])
+        self._args = ArgsPrototype(batch_size, batch_size, epochs, weight_decay, lr, momentum, False, seed, log_interval, model_dir, save_freq, swa_warmup, swa, lr_schedule)
+        self._ds_name = ds_name
+        self._model_name = model_name
+
+    def __call__(self) -> None:
+        main(self._ds_name, self._model_name, 0, self._args)
+
 
 # Define settings
-model_dir = args.model_dir
-if not os.path.exists(model_dir):
-    os.makedirs(model_dir)
-use_cuda = not args.no_cuda and torch.cuda.is_available()
-torch.manual_seed(args.seed)
-device = torch.device("cuda" if use_cuda else "cpu")
-kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
 
 
 def train(
@@ -148,7 +79,7 @@ def train(
 
         # Determine the 'class' of the batch by looking at the most common class
         if ds_name == "cifar100":
-            avg_cls = int(torch.mode(coarse)[0])  # TODO cifar100 only
+            avg_cls = int(torch.mode(coarse)[0])
         else:
             avg_cls = int(torch.mode(target)[0])
 
@@ -442,7 +373,7 @@ def epochs_define_attacks(epoch, dataset):
     return attacks
 
 
-def main(ds_name, mod_name, clean_epochs):
+def main(ds_name, mod_name, clean_epochs, args):
     """
     Main training method, which establishes the model/dataset before conducting training and
     clean testing for each epoch. Then reports final training time and conducts robustness tests
@@ -452,6 +383,14 @@ def main(ds_name, mod_name, clean_epochs):
     :param mod_name: training model architecture
     :param clean_pochs: number of epochs in warmup round, default 0
     """
+
+    model_dir = args.model_dir
+    if not os.path.exists(model_dir):
+        os.makedirs(model_dir)
+    use_cuda = not args.no_cuda and torch.cuda.is_available()
+    torch.manual_seed(args.seed)
+    device = torch.device("cuda" if use_cuda else "cpu")
+    kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
 
     # Create file to print training progress
     filename = f"va-epochs-{ds_name}-{mod_name}-output.txt"
@@ -512,9 +451,6 @@ def main(ds_name, mod_name, clean_epochs):
         attacks = epochs_define_attacks(epoch, ds_name)
 
         # Calculate the time elapsed
-        curr_time = time.time()
-        time_elapsed = curr_time - start_tot
-
         start = time.time()  # start recording training time
         train(
             args,
@@ -580,7 +516,3 @@ def main(ds_name, mod_name, clean_epochs):
     robust_eval(model_copy, device, test_loader, ds_name, f)
 
     f.close()  # close output file
-
-
-if __name__ == "__main__":
-    main("cifar10", "wideres34", 20)

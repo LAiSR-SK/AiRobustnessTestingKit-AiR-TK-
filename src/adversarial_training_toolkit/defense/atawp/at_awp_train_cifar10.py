@@ -34,9 +34,6 @@ def normalize(X):
     return (X - mu) / std
 
 
-upper_limit, lower_limit = 1, 0
-
-
 def clamp(X, lower_limit, upper_limit):
     return torch.max(torch.min(X, upper_limit), lower_limit)
 
@@ -77,10 +74,7 @@ class Batches:
 
 def mixup_data(x, y, alpha=1.0):
     """Returns mixed inputs, pairs of targets, and lambda"""
-    if alpha > 0:
-        lam = np.random.beta(alpha, alpha)
-    else:
-        lam = 1
+    lam = np.random.beta(alpha, alpha) if alpha > 0 else 1
 
     batch_size = x.size()[0]
     index = torch.randperm(batch_size).cuda()
@@ -111,6 +105,8 @@ def attack_pgd(
 ):
     max_loss = torch.zeros(y.shape[0]).cuda()
     max_delta = torch.zeros_like(X).cuda()
+    lower_limit = 0
+    upper_limit = 1
     for _ in range(restarts):
         delta = torch.zeros_like(X).cuda()
         if norm == "l_inf":
@@ -241,6 +237,8 @@ def get_args():
 
 def main():
     args = get_args()
+    lower_limit = 0
+    upper_limit = 1
     if args.awp_gamma <= 0.0:
         args.awp_warmup = np.infty
 
@@ -557,7 +555,7 @@ def main():
         test_robust_loss = 0
         test_robust_acc = 0
         test_n = 0
-        for i, batch in enumerate(test_batches):
+        for batch in test_batches:
             X, y = batch["input"], batch["target"]
 
             # Random initialization

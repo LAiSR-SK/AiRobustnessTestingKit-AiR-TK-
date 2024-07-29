@@ -4,10 +4,9 @@ from adversarial_training_toolkit import (
     attack,
     data,
     defense,
-    interface,
     loss,
     model,
     util,
 )
 
-__all__ = ["attack", "defense", "interface", "model", "data", "loss", "util"]
+__all__ = ["attack", "defense", "model", "data", "loss", "util"]

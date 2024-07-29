@@ -1,114 +1,188 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-import argparse
 import datetime
 import os
-import ssl
+from collections import namedtuple
 
-import adversarial_training_toolkit.defense.fat.fat_attack_generator as attack
-import numpy as np
 import torch
 import torchvision
-from adversarial_training_toolkit.defense.fat.fat_earlystop import earlystop
-from adversarial_training_toolkit.model import ResNet18, WideResNet
 from torch import nn, optim
 from torchvision import transforms
 
-ssl._create_default_https_context = ssl._create_unverified_context
+import adversarial_training_toolkit.defense.fat.fat_attack_generator as attack
+from adversarial_training_toolkit.defense.fat.fat_earlystop import earlystop
+from adversarial_training_toolkit.model import ResNet18, WideResNet
 
-parser = argparse.ArgumentParser(
-    description="PyTorch Friendly Adversarial Training"
-)
-parser.add_argument(
-    "--epochs",
-    type=int,
-    default=120,
-    metavar="N",
-    help="number of epochs to train",
-)
-parser.add_argument(
-    "--weight_decay", "--wd", default=2e-4, type=float, metavar="W"
-)
-parser.add_argument(
-    "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
-)
-parser.add_argument(
-    "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
-)
-parser.add_argument(
-    "--epsilon", type=float, default=0.031, help="perturbation bound"
-)
-parser.add_argument(
-    "--num_steps", type=int, default=10, help="maximum perturbation step K"
-)
-parser.add_argument("--step_size", type=float, default=0.007, help="step size")
-parser.add_argument(
-    "--seed", type=int, default=7, metavar="S", help="random seed"
-)
-parser.add_argument(
-    "--net",
-    type=str,
-    default="wideresnet",
-    help="decide which network to use,choose from smallcnn,resnet18,WRN",
-)
-parser.add_argument("--tau", type=int, default=0, help="step tau")
-parser.add_argument(
-    "--dataset",
-    type=str,
-    default="cifar10",
-    help="choose from cifar10,cifar100",
-)
-parser.add_argument(
-    "--rand_init",
-    type=bool,
-    default=True,
-    help="whether to initialize adversarial sample with random noise",
-)
-parser.add_argument(
-    "--omega",
-    type=float,
-    default=0.001,
-    help="random sample parameter for adv data generation",
-)
-parser.add_argument(
-    "--dynamictau", type=bool, default=True, help="whether to use dynamic tau"
-)
-parser.add_argument("--depth", type=int, default=34, help="WRN depth")
-parser.add_argument(
-    "--width_factor", type=int, default=10, help="WRN width factor"
-)
-parser.add_argument(
-    "--drop_rate", type=float, default=0.0, help="WRN drop rate"
-)
-parser.add_argument(
-    "--out_dir", type=str, default="./FAT_results_10", help="dir of output"
-)
-parser.add_argument(
-    "--resume",
-    type=str,
-    default="",
-    help="whether to resume training, default: None",
-)
+# ssl._create_default_https_context = ssl._create_unverified_context
 
-args = parser.parse_args()
+# parser = argparse.ArgumentParser(
+# description="PyTorch Friendly Adversarial Training"
+# )
+# parser.add_argument(
+# "--epochs",
+# type=int,
+# default=120,
+# metavar="N",
+# help="number of epochs to train",
+# )
+# parser.add_argument(
+# "--weight_decay", "--wd", default=2e-4, type=float, metavar="W"
+# )
+# parser.add_argument(
+# "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
+# )
+# parser.add_argument(
+# "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
+# )
+# parser.add_argument(
+# "--epsilon", type=float, default=0.031, help="perturbation bound"
+# )
+# parser.add_argument(
+# "--num_steps", type=int, default=10, help="maximum perturbation step K"
+# )
+# parser.add_argument("--step_size", type=float, default=0.007, help="step size")
+# parser.add_argument(
+# "--seed", type=int, default=7, metavar="S", help="random seed"
+# )
+# parser.add_argument(
+# "--net",
+# type=str,
+# default="wideresnet",
+# help="decide which network to use,choose from smallcnn,resnet18,WRN",
+# )
+# parser.add_argument("--tau", type=int, default=0, help="step tau")
+# parser.add_argument(
+# "--dataset",
+# type=str,
+# default="cifar10",
+# help="choose from cifar10,cifar100",
+# )
+# parser.add_argument(
+# "--rand_init",
+# type=bool,
+# default=True,
+# help="whether to initialize adversarial sample with random noise",
+# )
+# parser.add_argument(
+# "--omega",
+# type=float,
+# default=0.001,
+# help="random sample parameter for adv data generation",
+# )
+# parser.add_argument(
+# "--dynamictau", type=bool, default=True, help="whether to use dynamic tau"
+# )
+# parser.add_argument("--depth", type=int, default=34, help="WRN depth")
+# parser.add_argument(
+# "--width_factor", type=int, default=10, help="WRN width factor"
+# )
+# parser.add_argument(
+# "--drop_rate", type=float, default=0.0, help="WRN drop rate"
+# )
+# parser.add_argument(
+# "--out_dir", type=str, default="./FAT_results_10", help="dir of output"
+# )
+# parser.add_argument(
+# "--resume",
+# type=str,
+# default="",
+# help="whether to resume training, default: None",
+# )
+
+# args = parser.parse_args()
+
+
+class FatTraining:
+    def __init__(
+        self,
+        dataset_name: str,
+        model_name: str,
+        epochs: int = 120,
+        weight_decay: float = 2e-4,
+        lr: float = 0.1,
+        momentum: float = 0.9,
+        epsilon: float = 0.031,
+        num_steps: int = 10,
+        step_size: float = 0.007,
+        seed: int = 7,
+        out_dir: str = "data/",
+    ) -> None:
+        self._dataset_name = dataset_name
+
+        ArgPrototype = namedtuple(
+            "ArgPrototype",
+            [
+                "net",
+                "dataset",
+                "epochs",
+                "weight_decay",
+                "lr",
+                "momentum",
+                "epsilon",
+                "num_steps",
+                "step_size",
+                "seed",
+                "tau",
+                "rand_init",
+                "omega",
+                "dynamictau",
+                "depth",
+                "width_factor",
+                "drop_rate",
+                "out_dir",
+                "resume",
+            ],
+        )
+        self._args = ArgPrototype(
+            model_name,
+            dataset_name,
+            epochs,
+            weight_decay,
+            lr,
+            momentum,
+            epsilon,
+            num_steps,
+            step_size,
+            seed,
+            0.0,
+            True,
+            0.001,
+            True,
+            34,
+            10,
+            0.0,
+            out_dir,
+            "",
+        )
+
+    def __call__(self) -> None:
+        torch.manual_seed(self._args.seed)
+        torch.backends.cudnn.deterministic = False
+        torch.backends.cudnn.benchmark = True
+
+        if not os.path.exists(self._args.out_dir):
+            os.path.makedirs(self._args.out_dir)
+
+        main_fat(self._dataset_name, self._args)
+
 
 # training settings
-torch.manual_seed(args.seed)
-np.random.seed(args.seed)
-torch.cuda.manual_seed_all(args.seed)
-torch.backends.cudnn.deterministic = False
-torch.backends.cudnn.benchmark = True
+# torch.manual_seed(args.seed)
+# np.random.seed(args.seed)
+# torch.cuda.manual_seed_all(args.seed)
+# torch.backends.cudnn.deterministic = False
+# torch.backends.cudnn.benchmark = True
 
-out_dir = args.out_dir
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir)
+# out_dir = args.out_dir
+# if not os.path.exists(out_dir):
+# os.makedirs(out_dir)
 
 
-def train(model, train_loader, optimizer, tau):
+def train(args, model, train_loader, optimizer, tau):
     starttime = datetime.datetime.now()
     loss_sum = 0
     bp_count = 0
-    for batch_idx, (data, target) in enumerate(train_loader):
+    for data, target in train_loader:
         data, target = data.cuda(), target.cuda()
 
         # Get friendly adversarial training data via early-stopped PGD
@@ -144,7 +218,7 @@ def train(model, train_loader, optimizer, tau):
     return time, loss_sum, bp_count_avg
 
 
-def adjust_tau(epoch, dynamictau):
+def adjust_tau(args, epoch, dynamictau):
     tau = args.tau
     if dynamictau:
         if epoch <= 50:
@@ -156,7 +230,7 @@ def adjust_tau(epoch, dynamictau):
     return tau
 
 
-def adjust_learning_rate(optimizer, epoch):
+def adjust_learning_rate(args, optimizer, epoch):
     """decrease the learning rate"""
     lr = args.lr
     if epoch >= 60:
@@ -169,12 +243,12 @@ def adjust_learning_rate(optimizer, epoch):
         param_group["lr"] = lr
 
 
-def save_checkpoint(state, checkpoint=out_dir, filename="checkpoint.pth.tar"):
-    filepath = os.path.join(checkpoint, filename)
+def save_checkpoint(args, state, filename="checkpoint.pth.tar"):
+    filepath = os.path.join(args.out_dir, filename)
     torch.save(state, filepath)
 
 
-def main_fat(ds_name):
+def main_fat(ds_name, args):
     # setup data loader
     transform_train = transforms.Compose(
         [
@@ -219,9 +293,9 @@ def main_fat(ds_name):
     else:
         raise NotImplementedError
 
-    if args.net == "resnet18":
-        model = ResNet18().cuda()
-    if args.net == "wideresnet":
+    if args.net == "res18":
+        model = ResNet18(num_classes=100 if args.dataset == "cifar100" else 10,).cuda()
+    if args.net == "wideres":
         # e.g., WRN-34-10
         model = WideResNet(
             depth=args.depth,
@@ -266,12 +340,13 @@ def main_fat(ds_name):
     else:
         raise NotImplementedError
     for epoch in range(start_epoch, args.epochs):
-        adjust_learning_rate(optimizer, epoch + 1)
+        adjust_learning_rate(args, optimizer, epoch + 1)
         train_time, train_loss, bp_count_avg = train(
+            args,
             model,
             train_loader,
             optimizer,
-            adjust_tau(epoch + 1, args.dynamictau),
+            adjust_tau(args, epoch + 1, args.dynamictau),
         )
 
         ## Evalutions the same as DAT.
@@ -327,6 +402,7 @@ def main_fat(ds_name):
         # logger_test.append([epoch + 1, test_nat_acc, fgsm_acc, test_pgd20_acc, cw_acc])
 
         save_checkpoint(
+            args,
             {
                 "epoch": epoch + 1,
                 "state_dict": model.state_dict(),
@@ -334,7 +410,7 @@ def main_fat(ds_name):
                 "test_nat_acc": test_nat_acc,
                 "test_pgd20_acc": test_pgd20_acc,
                 "optimizer": optimizer.state_dict(),
-            }
+            },
         )
 
 

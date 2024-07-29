@@ -1,13 +1,21 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 
-import argparse
 import copy
 import os
 import time
+from collections import namedtuple
 
 import torch
+from torch import optim
+
 from adversarial_training_toolkit.defense.trades.trades_loss import trades_loss
+from adversarial_training_toolkit.helper_functions import (
+    adjust_learning_rate,
+    eval_clean,
+    load_data,
+    robust_eval,
+)
 from adversarial_training_toolkit.model import (
     ResNet18,
     ResNet34,
@@ -17,91 +25,142 @@ from adversarial_training_toolkit.model import (
     WideResNet,
 )
 
-from adversarial_training_toolkit.helper_functions import (
-    adjust_learning_rate,
-    eval_clean,
-    load_data,
-    robust_eval,
-)
-from torch import optim
 
-parser = argparse.ArgumentParser(
-    description="PyTorch CIFAR Adversarial Training Framework"
-)
-parser.add_argument(
-    "--batch-size",
-    type=int,
-    default=128,
-    metavar="N",
-    help="input batch size for training (default: 128)",
-)
-parser.add_argument(
-    "--test-batch-size",
-    type=int,
-    default=128,
-    metavar="N",
-    help="input batch size for testing (default: 128)",
-)
-parser.add_argument(
-    "--epochs",
-    type=int,
-    default=100,
-    metavar="N",
-    help="number of epochs to train",
-)
-parser.add_argument(
-    "--weight-decay", "--wd", default=2e-4, type=float, metavar="W"
-)
-parser.add_argument(
-    "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
-)
-parser.add_argument(
-    "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
-)
-parser.add_argument(
-    "--no-cuda",
-    action="store_true",
-    default=False,
-    help="disables CUDA training",
-)
-parser.add_argument(
-    "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
-)
-parser.add_argument(
-    "--log-interval",
-    type=int,
-    default=100,
-    metavar="N",
-    help="how many batches to wait before logging training status",
-)
-parser.add_argument(
-    "--model-dir",
-    default="./data/model",
-    help="directory of model for saving checkpoint",
-)
-parser.add_argument(
-    "--save-freq",
-    "-s",
-    default=1,
-    type=int,
-    metavar="N",
-    help="save frequency",
-)
-parser.add_argument(
-    "--lr-schedule",
-    default="decay",
-    help="schedule for adjusting learning rate",
-)
-args = parser.parse_args()
+class TradesTraining:
+    def __init__(
+        self,
+        dataset_name: str,
+        model_name: str,
+        batch_size: int = 128,
+        epochs: int = 100,
+        weight_decay: float = 2e-4,
+        lr: float = 0.1,
+        momentum: float = 0.9,
+        seed: int = 1,
+        log_interval: int = 1,
+        model_dir: str = "./data/model",
+        save_freq: int = 1,
+        lr_schedule: str = "decay",
+    ) -> None:
+        ArgsPrototype = namedtuple(
+            "ArgsPrototype",
+            [
+                "batch_size",
+                "test_batch_size",
+                "epochs",
+                "weight_decay",
+                "lr",
+                "momentum",
+                "no_cuda",
+                "seed",
+                "log_interval",
+                "model_dir",
+                "save_freq",
+                "lr_schedule",
+            ],
+        )
+        self._args = ArgsPrototype(
+            batch_size,
+            batch_size,
+            epochs,
+            weight_decay,
+            lr,
+            momentum,
+            False,
+            seed,
+            log_interval,
+            model_dir,
+            save_freq,
+            lr_schedule,
+        )
+        self._model_name = model_name
+        self._dataset_name = dataset_name
+
+    def __call__(self) -> None:
+        torch.manual_seed(self._args.seed)
+        if not os.path.exists(self._args.model_dir):
+            os.makedirs(self._args.model_dir)
+
+        main_trades(self._dataset_name, self._model_name, self._args)
+
+
+# parser = argparse.ArgumentParser(
+# description="PyTorch CIFAR Adversarial Training Framework"
+# )
+# parser.add_argument(
+# "--batch-size",
+# type=int,
+# default=128,
+# metavar="N",
+# help="input batch size for training (default: 128)",
+# )
+# parser.add_argument(
+# "--test-batch-size",
+# type=int,
+# default=128,
+# metavar="N",
+# help="input batch size for testing (default: 128)",
+# )
+# parser.add_argument(
+# "--epochs",
+# type=int,
+# default=100,
+# metavar="N",
+# help="number of epochs to train",
+# )
+# parser.add_argument(
+# "--weight-decay", "--wd", default=2e-4, type=float, metavar="W"
+# )
+# parser.add_argument(
+# "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
+# )
+# parser.add_argument(
+# "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
+# )
+# parser.add_argument(
+# "--no-cuda",
+# action="store_true",
+# default=False,
+# help="disables CUDA training",
+# )
+# parser.add_argument(
+# "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
+# )
+# parser.add_argument(
+# "--log-interval",
+# type=int,
+# default=100,
+# metavar="N",
+# help="how many batches to wait before logging training status",
+# )
+# parser.add_argument(
+# "--model-dir",
+# default="./data/model",
+# help="directory of model for saving checkpoint",
+# )
+# parser.add_argument(
+# "--save-freq",
+# "-s",
+# default=1,
+# type=int,
+# metavar="N",
+# help="save frequency",
+# )
+# parser.add_argument(
+# "--lr-schedule",
+# default="decay",
+# help="schedule for adjusting learning rate",
+# )
+# args = parser.parse_args()
 
 # Establish the settings
-model_dir = args.model_dir
-if not os.path.exists(model_dir):
-    os.makedirs(model_dir)
-use_cuda = not args.no_cuda and torch.cuda.is_available()
-torch.manual_seed(args.seed)
-device = torch.device("cuda" if use_cuda else "cpu")
-kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
+# model_dir = args.model_dir
+# if not os.path.exists(model_dir):
+# os.makedirs(model_dir)
+# use_cuda = not args.no_cuda and torch.cuda.is_available()
+# torch.manual_seed(args.seed)
+# device = torch.device("cuda" if use_cuda else "cpu")
+# kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
 
 
 def train(args, model, device, train_loader, optimizer, ds_name, epoch, f):
@@ -127,6 +186,7 @@ def train(args, model, device, train_loader, optimizer, ds_name, epoch, f):
         optimizer.zero_grad()  # zero out the gradients
 
         # Calculate the clean loss
+        # TODO(Ezuharad): There is some kind of demon in the teardown of this call
         loss, batch_metrics = trades_loss(model, data, target, optimizer)
 
         # Update the model based on the loss
@@ -143,7 +203,7 @@ def train(args, model, device, train_loader, optimizer, ds_name, epoch, f):
             )
 
 
-def main_trades(ds_name, mod_name="wideres34"):
+def main_trades(ds_name, mod_name, args):
     """
     Main training method, which establishes the model/dataset before conducting training and
     clean testing for each epoch. Then reports final training time and conducts robustness tests
@@ -157,6 +217,7 @@ def main_trades(ds_name, mod_name="wideres34"):
     filename = f"log/trades-{ds_name}-{mod_name}-output.txt"
     f = open(filename, "a")
 
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     # Initialize the desired model
     start_tot = time.time()  # start timing the full method
     if mod_name == "res18":
@@ -195,9 +256,11 @@ def main_trades(ds_name, mod_name="wideres34"):
     )
 
     # Set up the dataloaders
+    kwargs = {"num_workers": 1, "pin_memory": True} if device == "cuda" else {}
     train_loader, test_loader = load_data(ds_name, args, kwargs, coarse=True)
 
     # Save the model and optimizer
+    model_dir = args.model_dir
     torch.save(
         model.state_dict(),
         os.path.join(model_dir, f"model-trades-{ds_name}-{mod_name}-start.pt"),
@@ -294,5 +357,5 @@ def main_trades(ds_name, mod_name="wideres34"):
     f.close()  # close the output file
 
 
-if __name__ == "__main__":
-    main_trades("cifar100", "res18")
+# if __name__ == "__main__":
+# main_trades("cifar100", "res18")

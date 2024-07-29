@@ -6,15 +6,15 @@ import os
 import time
 
 import torch
-from adversarial_training_toolkit.loss import standard_loss
-from adversarial_training_toolkit.util import get_model
 from adversarial_training_toolkit.helper_functions import (
     adjust_learning_rate,
     eval_clean,
     load_data,
     robust_eval,
 )
-from torch import nn, optim
+from adversarial_training_toolkit.loss import standard_loss
+from adversarial_training_toolkit.util import get_model
+from torch import optim
 
 parser = argparse.ArgumentParser(description="PyTorch VA Adversarial Training")
 parser.add_argument("--dataset", type=str, default="cifar100", help="dataset")

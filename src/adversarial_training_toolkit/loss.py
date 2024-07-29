@@ -8,6 +8,10 @@ from torch import nn, optim
 from torch.autograd import Variable
 
 from adversarial_training_toolkit.attack import create_attack
+from adversarial_training_toolkit.helper_functions import (
+    cw_whitebox,
+    mim_whitebox,
+)
 
 
 def adt_va_loss(model, x_natural, y, att, ds_name, optimizer, device):
@@ -92,7 +96,7 @@ def va_get_xadv(model, x, y, att, device, ds):
     if att == "linf-pgd-40":
         attack = create_attack(model, criterion, "linf-pgd", 0.03, 40, 0.01)
         x_adv, _ = attack.perturb(x, y)
-    elif att == "cw":  # TODO(Ezuharad): These should be moved here
+    elif att == "cw":
         x_adv = cw_whitebox(model, x, y, device, ds)
     elif att == "mim":
         x_adv = mim_whitebox(model, x, y, device)
@@ -124,7 +128,6 @@ def va_get_xadv(model, x, y, att, device, ds):
         adversary.attacks_to_run = ["square"]
         x_adv = adversary.run_standard_evaluation(x, y)
     else:
-        print(att)
         raise NotImplementedError
 
     return x_adv
@@ -201,7 +204,7 @@ def adt_loss(
             # minus the entropy times lambda, then step backwards
             with torch.enable_grad():
                 loss = -F.cross_entropy(model(x_adv), y) - lbd * entropy
-            loss.backward(retain_graph=True if s != num_samples - 1 else False)
+            loss.backward(retain_graph=s != num_samples - 1)
 
         # Step the distribution optimizer
         optimizer_adv.step()

@@ -1,7 +1,6 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 
-import argparse
 import ssl
 
 import numpy as np
@@ -9,6 +8,9 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
+from torch.autograd import Variable
+from torchvision import transforms
+
 from adversarial_training_toolkit.data import CIFAR100
 from adversarial_training_toolkit.model import (
     ResNet18,
@@ -18,8 +20,6 @@ from adversarial_training_toolkit.model import (
     ResNet152,
     WideResNet,
 )
-from torch.autograd import Variable
-from torchvision import transforms
 
 
 def eval_clean(model, device, data_loader, name, ds_name, f):
@@ -221,9 +221,7 @@ def load_data(ds_name, args, kwargs, coarse=False):
         ssl._create_unverified_context
     )  # set the context for working with tensors
 
-    if (
-        ds_name == "cifar10"
-    ):  # TODO(Ezuharad): These hardcoded paths should be enumerated in a config
+    if ds_name == "cifar10":
         # Load in the CIFAR10 dataloaders
         trainset = torchvision.datasets.CIFAR10(
             root="../data/download",
@@ -426,13 +424,7 @@ def clean(model, X, y):
 
 
 def pgd_whitebox_eval(
-    model,
-    X,
-    y,
-    device,
-    epsilon=0.031,
-    num_steps=20,
-    step_size=2.0 / 255.0
+    model, X, y, device, epsilon=0.031, num_steps=20, step_size=2.0 / 255.0
 ):
     """
     Evaluates the model by perturbing an image using the PGD attack.
@@ -457,9 +449,7 @@ def pgd_whitebox_eval(
 
     # If specified, create random noice between - and + epsilon and add to X_pgd
     random_noise = (
-        torch.FloatTensor(*X_pgd.shape)
-        .uniform_(-epsilon, epsilon)
-        .to(device)
+        torch.FloatTensor(*X_pgd.shape).uniform_(-epsilon, epsilon).to(device)
     )
     X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
 
@@ -569,9 +559,7 @@ def cw_whitebox_eval(
 
     # If specified, create random noice between - and + epsilon and add to X_cw
     random_noise = (
-        torch.FloatTensor(*X_cw.shape)
-        .uniform_(-epsilon, epsilon)
-        .to(device)
+        torch.FloatTensor(*X_cw.shape).uniform_(-epsilon, epsilon).to(device)
     )
     X_cw = Variable(X_cw.data + random_noise, requires_grad=True)
 
@@ -679,7 +667,7 @@ def cw_whitebox(
     dataset,
     epsilon=0.031,
     num_steps=20,
-    step_size=2.0 / 255.0
+    step_size=2.0 / 255.0,
 ):
     """
     Attacks the specified image X using the CW attack and returns the adversarial example
@@ -700,9 +688,7 @@ def cw_whitebox(
 
     # If adding random, create random noice between - and + epsilon and add to X_pgd
     random_noise = (
-        torch.FloatTensor(*X_pgd.shape)
-        .uniform_(-epsilon, epsilon)
-        .to(device)
+        torch.FloatTensor(*X_pgd.shape).uniform_(-epsilon, epsilon).to(device)
     )
     X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
 
@@ -766,9 +752,7 @@ def mim_whitebox(
 
     # If adding random, create random noice between - and + epsilon and add to X_pgd
     random_noise = (
-        torch.FloatTensor(*X_pgd.shape)
-        .uniform_(-epsilon, epsilon)
-        .to(device)
+        torch.FloatTensor(*X_pgd.shape).uniform_(-epsilon, epsilon).to(device)
     )
     X_pgd = Variable(X_pgd.data + random_noise, requires_grad=True)
 

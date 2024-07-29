@@ -21,6 +21,17 @@ from torch import nn, optim
 from torch.autograd import Variable
 from torch.utils.data.sampler import SubsetRandomSampler
 
+
+class CurratTraining:
+    def __init__(
+        self,
+    ) -> None:
+        pass
+
+    def __call__(self) -> None:
+        pass
+
+
 with open("training/currat/currat_config.json") as config_file:
     config = json.load(config_file)
 

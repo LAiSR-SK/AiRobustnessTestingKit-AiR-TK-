@@ -1,47 +1,84 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 
-import argparse
 import copy
 import os
 import time
 from collections import namedtuple
 
 import torch
-from adversarial_training_toolkit.loss import adt_loss
-from adversarial_training_toolkit.model import WideResNet
-from adversarial_training_toolkit.helper_functions import (
-    adjust_learning_rate,
-    load_data,
-    robust_eval,
-    eval_clean,
-)
 from torch import optim
 from torch.nn import Module
 
-# Establish the settings
-model_dir = args.model_dir
-if not os.path.exists(model_dir):
-    os.makedirs(model_dir)
-torch.manual_seed(args.seed)
-device = torch.device("cuda" if use_cuda else "cpu")
-kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
+from adversarial_training_toolkit.helper_functions import (
+    adjust_learning_rate,
+    eval_clean,
+    load_data,
+    robust_eval,
+)
+from adversarial_training_toolkit.loss import adt_loss
+from adversarial_training_toolkit.model import (
+    ResNet18,
+    ResNet34,
+    ResNet50,
+    ResNet101,
+    ResNet152,
+    WideResNet,
+)
 
-class AdtTraining():
-    def __init__(self, ds_name: str, model_name: str, batch_size: int = 128, epochs: int = 76, weight_decay: float = 2e-4, lr: float=0.1, momentum: float=0.9, seed: int = 0, model_dir: str = "data/model", lr_schedule: str = "decay") -> None:
-        ArgsPrototype = namedtuple("Prototype", {"batch_size", "test_batch_size", "epochs", "weight_decay", "lr", "momentum", "seed", "model_dir", "save_freq", "lr_schedule"})
-        self._args = ArgsPrototype(batch_size, batch_size, epochs, weight_decay, lr, momentum, seed, model_dir, 1, lr_schedule)
+
+class AdtTraining:
+    def __init__(
+        self,
+        ds_name: str,
+        model_name: str,
+        batch_size: int = 128,
+        epochs: int = 76,
+        weight_decay: float = 2e-4,
+        lr: float = 0.1,
+        momentum: float = 0.9,
+        seed: int = 0,
+        model_dir: str = "data/model",
+        lr_schedule: str = "decay",
+    ) -> None:
+        ArgsPrototype = namedtuple(
+            "Prototype",
+            [
+                "batch_size",
+                "test_batch_size",
+                "epochs",
+                "weight_decay",
+                "lr",
+                "momentum",
+                "seed",
+                "model_dir",
+                "save_freq",
+                "lr_schedule",
+                "log_interval",
+            ],
+        )
+        self._args = ArgsPrototype(
+            batch_size,
+            batch_size,
+            epochs,
+            weight_decay,
+            lr,
+            momentum,
+            seed,
+            model_dir,
+            1,
+            seed,
+            1,
+        )
         self._ds_name: str = ds_name
         self._model_name: str = model_name
-    
+
     def __call__(self) -> Module:
+        model_dir: str = self._args.model_dir
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
         torch.manual_seed(self._args.seed)
-        kwargs = {"num_workers": 1, "pin_memory": True} if torch.cuda.is_available() else {}
         main_adt(self._ds_name, self._model_name, self._args)
-        
-        pass
-
-
 
 
 def train(args, model, device, train_loader, optimizer, ds_name, epoch):
@@ -95,6 +132,7 @@ def main_adt(ds_name, mod_name, args):
     filename = f"log/adt-{ds_name}-{mod_name}-output.txt"
     f = open(filename, "a")
 
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     # Initialize the desired model
     start_tot = time.time()  # start timing the full method
     if mod_name == "res18":
@@ -133,16 +171,25 @@ def main_adt(ds_name, mod_name, args):
     )
 
     # Set up the dataloaders
+    kwargs = (
+        {"num_workers": 1, "pin_memory": True}
+        if torch.cuda.is_available()
+        else {}
+    )
     train_loader, test_loader = load_data(ds_name, args, kwargs, coarse=True)
 
     # Save the model and optimizer
     torch.save(
         model.state_dict(),
-        os.path.join(model_dir, f"model-adt-{ds_name}-{mod_name}-start.pt"),
+        os.path.join(
+            args.model_dir, f"model-adt-{ds_name}-{mod_name}-start.pt"
+        ),
     )
     torch.save(
         optimizer.state_dict(),
-        os.path.join(model_dir, f"opt-adt-{ds_name}-{mod_name}-start.tar"),
+        os.path.join(
+            args.model_dir, f"opt-adt-{ds_name}-{mod_name}-start.tar"
+        ),
     )
 
     # Begin training for the designated number of epochs
@@ -175,14 +222,14 @@ def main_adt(ds_name, mod_name, args):
             torch.save(
                 model.state_dict(),
                 os.path.join(
-                    model_dir,
+                    args.model_dir,
                     f"model-adt-{ds_name}-{mod_name}-epoch{epoch}.pt",
                 ),
             )
             torch.save(
                 optimizer.state_dict(),
                 os.path.join(
-                    model_dir,
+                    args.model_dir,
                     f"opt-adt-{ds_name}-{mod_name}-epoch{epoch}.tar",
                 ),
             )

@@ -99,5 +99,6 @@ def trades_loss(
         F.log_softmax(model(x_adv), dim=1),
         torch.clamp(F.softmax(model(x_natural), dim=1), min=1e-8),
     )
+
     loss = loss_natural + beta * loss_robust
     return loss
