@@ -13,84 +13,6 @@ import adversarial_training_toolkit.defense.fat.fat_attack_generator as attack
 from adversarial_training_toolkit.defense.fat.fat_earlystop import earlystop
 from adversarial_training_toolkit.model import ResNet18, WideResNet
 
-# ssl._create_default_https_context = ssl._create_unverified_context
-
-# parser = argparse.ArgumentParser(
-# description="PyTorch Friendly Adversarial Training"
-# )
-# parser.add_argument(
-# "--epochs",
-# type=int,
-# default=120,
-# metavar="N",
-# help="number of epochs to train",
-# )
-# parser.add_argument(
-# "--weight_decay", "--wd", default=2e-4, type=float, metavar="W"
-# )
-# parser.add_argument(
-# "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
-# )
-# parser.add_argument(
-# "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
-# )
-# parser.add_argument(
-# "--epsilon", type=float, default=0.031, help="perturbation bound"
-# )
-# parser.add_argument(
-# "--num_steps", type=int, default=10, help="maximum perturbation step K"
-# )
-# parser.add_argument("--step_size", type=float, default=0.007, help="step size")
-# parser.add_argument(
-# "--seed", type=int, default=7, metavar="S", help="random seed"
-# )
-# parser.add_argument(
-# "--net",
-# type=str,
-# default="wideresnet",
-# help="decide which network to use,choose from smallcnn,resnet18,WRN",
-# )
-# parser.add_argument("--tau", type=int, default=0, help="step tau")
-# parser.add_argument(
-# "--dataset",
-# type=str,
-# default="cifar10",
-# help="choose from cifar10,cifar100",
-# )
-# parser.add_argument(
-# "--rand_init",
-# type=bool,
-# default=True,
-# help="whether to initialize adversarial sample with random noise",
-# )
-# parser.add_argument(
-# "--omega",
-# type=float,
-# default=0.001,
-# help="random sample parameter for adv data generation",
-# )
-# parser.add_argument(
-# "--dynamictau", type=bool, default=True, help="whether to use dynamic tau"
-# )
-# parser.add_argument("--depth", type=int, default=34, help="WRN depth")
-# parser.add_argument(
-# "--width_factor", type=int, default=10, help="WRN width factor"
-# )
-# parser.add_argument(
-# "--drop_rate", type=float, default=0.0, help="WRN drop rate"
-# )
-# parser.add_argument(
-# "--out_dir", type=str, default="./FAT_results_10", help="dir of output"
-# )
-# parser.add_argument(
-# "--resume",
-# type=str,
-# default="",
-# help="whether to resume training, default: None",
-# )
-
-# args = parser.parse_args()
-
 
 class FatTraining:
     def __init__(
@@ -164,18 +86,6 @@ class FatTraining:
             os.path.makedirs(self._args.out_dir)
 
         main_fat(self._dataset_name, self._args)
-
-
-# training settings
-# torch.manual_seed(args.seed)
-# np.random.seed(args.seed)
-# torch.cuda.manual_seed_all(args.seed)
-# torch.backends.cudnn.deterministic = False
-# torch.backends.cudnn.benchmark = True
-
-# out_dir = args.out_dir
-# if not os.path.exists(out_dir):
-# os.makedirs(out_dir)
 
 
 def train(args, model, train_loader, optimizer, tau):
@@ -413,6 +323,3 @@ def main_fat(ds_name, args):
             },
         )
 
-
-if __name__ == "__main__":
-    main_fat("cifar10")
