@@ -6,8 +6,10 @@ import sys
 import time
 
 import numpy as np
+import torch
 import torch.optim as optim
 from adversarial_training_toolkit.model import WideResNet
+from torch import nn
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
@@ -22,7 +24,7 @@ parser.add_argument(
 parser.add_argument("--gpus", type=str, default="0")
 parser.add_argument("--epochs", type=int, default=200)
 parser.add_argument("--batch_size", type=int, default=128)
-parser.add_argument("--checkpoint", type=str, default="./custat_output")
+parser.add_argument("--checkpoint", type=str, default=".log/custat_output")
 parser.add_argument(
     "--loss_type", type=str, default="xent", choices=["xent", "mix"]
 )

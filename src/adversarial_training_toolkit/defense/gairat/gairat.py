@@ -1,131 +1,119 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
-import argparse
 import os
+from collections import namedtuple
 
-import adversarial_training_toolkit.defense.gairat.gairat_attack_generator as attack
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
-from adversarial_training_toolkit.model import ResNet18, WideResNet
 from torchvision import transforms
 
-parser = argparse.ArgumentParser(
-    description="GAIRAT: Geometry-aware instance-dependent adversarial training"
-)
-parser.add_argument(
-    "--epochs",
-    type=int,
-    default=120,
-    metavar="N",
-    help="number of epochs to train",
-)
-parser.add_argument(
-    "--weight-decay", "--wd", default=2e-4, type=float, metavar="W"
-)
-parser.add_argument(
-    "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
-)
-parser.add_argument(
-    "--epsilon", type=float, default=0.031, help="perturbation bound"
-)
-parser.add_argument(
-    "--num-steps", type=int, default=10, help="maximum perturbation step K"
-)
-parser.add_argument("--step-size", type=float, default=0.007, help="step size")
-parser.add_argument(
-    "--seed", type=int, default=1, metavar="S", help="random seed"
-)
-parser.add_argument(
-    "--net",
-    type=str,
-    default="resnet18",
-    help="decide which network to use,choose from smallcnn,resnet18,WRN",
-)
-parser.add_argument(
-    "--dataset",
-    type=str,
-    default="cifar10",
-    help="choose from cifar10,svhn,cifar100,mnist",
-)
-parser.add_argument(
-    "--random",
-    type=bool,
-    default=True,
-    help="whether to initiat adversarial sample with random noise",
-)
-parser.add_argument(
-    "--depth", type=int, default=34, help="WRN depth"
-)  # originally 32
-parser.add_argument(
-    "--width-factor", type=int, default=10, help="WRN width factor"
-)
-parser.add_argument(
-    "--drop-rate", type=float, default=0.0, help="WRN drop rate"
-)
-parser.add_argument(
-    "--resume", type=str, default=None, help="whether to resume training"
-)
-parser.add_argument(
-    "--out-dir", type=str, default="./GAIRAT_result", help="dir of output"
-)
-parser.add_argument(
-    "--lr-schedule",
-    default="piecewise",
-    choices=[
-        "superconverge",
-        "piecewise",
-        "linear",
-        "onedrop",
-        "multipledecay",
-        "cosine",
-    ],
-)
-parser.add_argument("--lr-max", default=0.1, type=float)
-parser.add_argument("--lr-one-drop", default=0.01, type=float)
-parser.add_argument("--lr-drop-epoch", default=100, type=int)
-parser.add_argument(
-    "--Lambda", type=str, default="-1.0", help="parameter for GAIR"
-)
-parser.add_argument(
-    "--Lambda_max", type=float, default=float("inf"), help="max Lambda"
-)
-parser.add_argument(
-    "--Lambda_schedule",
-    default="fixed",
-    choices=["linear", "piecewise", "fixed"],
-)
-parser.add_argument(
-    "--weight_assignment_function",
-    default="Tanh",
-    choices=["Discrete", "Sigmoid", "Tanh"],
-)
-parser.add_argument(
-    "--begin_epoch", type=int, default=60, help="when to use GAIR"
-)
-args = parser.parse_args()
+import adversarial_training_toolkit.defense.gairat.gairat_attack_generator as attack
+from adversarial_training_toolkit.model import ResNet18, WideResNet
 
-# Training settings
-seed = args.seed
-momentum = args.momentum
-weight_decay = args.weight_decay
-depth = args.depth
-width_factor = args.width_factor
-drop_rate = args.drop_rate
-resume = args.resume
-out_dir = args.out_dir
 
-torch.manual_seed(seed)
-np.random.seed(seed)
-torch.cuda.manual_seed_all(seed)
-torch.backends.cudnn.benchmark = True
-torch.backends.cudnn.deterministic = True
+class GairatTraining:
+    def __init__(
+        self,
+        dataset: str = "cifar10",
+        net: str = "resnet18",
+        epochs: int = 120,
+        weight_decay: float = 2e-4,
+        momentum: float = 0.9,
+        epsilon: float = 0.031,
+        num_steps: int = 10,
+        step_size=0.007,
+        seed: int = 1,
+        log_dir: str = "log/gairat_out.tx",
+        lr_schedule: str = "piecewise",
+        lr_max: float = 0.1,
+        lr_one_drop: float = 0.1,
+        lr_drop_epoch: int = 100,
+        Lambda: int = -1,
+        begin_epoch: int = 60,
+    ) -> None:
+        ArgPrototype = namedtuple(
+            "ArgPrototype",
+            [
+                "epochs",
+                "weight_decay",
+                "momentum",
+                "epsilon",
+                "num_steps",
+                "step_size",
+                "seed",
+                "net",
+                "dataset",
+                "random",
+                "depth",
+                "width_factor",
+                "drop_rate",
+                "resume",
+                "out_dir",
+                "lr_schedule",
+                "lr_max",
+                "lr_one_drop",
+                "lr_drop_epoch",
+                "Lambda",
+                "Lambda_max",
+                "Lambda_schedule",
+                "Weight_assignment_function",
+                "begin_epoch",
+            ],
+        )
+        self._args = ArgPrototype(
+            epochs,
+            weight_decay,
+            momentum,
+            epsilon,
+            num_steps,
+            step_size,
+            seed,
+            net,
+            dataset,
+            True,
+            34,
+            10,
+            0.0,
+            None,
+            log_dir,
+            lr_schedule,
+            lr_max,
+            lr_one_drop,
+            lr_drop_epoch,
+            Lambda,
+            float("inf"),
+            "fixed",
+            "tanh",
+            begin_epoch,
+        )
+
+    def __call__(
+        self,
+    ) -> None:
+        torch.manual_seed(self._args.seed)
+        torch.backends.cudnn.benchmark = True
+        torch.backends.cudnn.deterministic = True
+        main_gairat(self._args)
+
+
+# # Training settings
+# seed = args.seed
+# momentum = args.momentum
+# weight_decay = args.weight_decay
+# depth = args.depth
+# width_factor = args.width_factor
+# drop_rate = args.drop_rate
+# resume = args.resume
+# out_dir = args.out_dir
 
 
 # Save checkpoint
-def save_checkpoint(state, checkpoint=out_dir, filename="checkpoint.pth.tar"):
+def save_checkpoint(
+    state, checkpoint, filename="checkpoint.pth.tar"
+):  # TODO: use args
     filepath = os.path.join(checkpoint, filename)
     torch.save(state, filepath)
 
@@ -155,7 +143,7 @@ def GAIR(num_steps, Kappa, Lambda, func):
 
 
 # Get adversarially robust network
-def train(epoch, model, train_loader, optimizer, Lambda, lr_schedule):
+def train(args, epoch, model, train_loader, optimizer, Lambda, lr_schedule):
     lr = 0
     num_data = 0
     train_robust_loss = 0
@@ -208,7 +196,7 @@ def train(epoch, model, train_loader, optimizer, Lambda, lr_schedule):
 
 
 # Adjust lambda for weight assignment using epoch
-def adjust_Lambda(epoch):
+def adjust_Lambda(epoch, args):
     Lam = float(args.Lambda)
     if args.epochs >= 110:
         # Train Wide-ResNet
@@ -247,7 +235,7 @@ def adjust_Lambda(epoch):
     return Lambda
 
 
-def main_gairat(ds_name, mod_name="wideres34"):
+def main_gairat(args):
     # Training settings
     seed = args.seed
     momentum = args.momentum
@@ -264,28 +252,12 @@ def main_gairat(ds_name, mod_name="wideres34"):
     torch.backends.cudnn.benchmark = True
     torch.backends.cudnn.deterministic = True
 
-    # Set model and dataset up
-    if mod_name == "res18":
-        args.net = "resnet18"
-    elif mod_name == "wideres34":
-        args.net = "WRN"
-    else:
-        raise NotImplementedError
-
-    if ds_name == "cifar10":
-        args.dataset = "cifar10"
-    elif ds_name == "cifar100":
-        args.dataset = "cifar100"
-    else:
-        raise NotImplementedError
-
     # Models and optimizer
-    if args.net == "resnet18":
+    if args.net == "res18":
         model = ResNet18(
             num_classes=100 if args.dataset == "cifar100" else 10
         ).cuda()
-        net = "resnet18"
-    if args.net == "WRN":
+    if args.net == "wideres":
         nc = 100 if args.dataset == "cifar100" else 10
         model = WideResNet(
             depth=depth,
@@ -293,7 +265,6 @@ def main_gairat(ds_name, mod_name="wideres34"):
             widen_factor=width_factor,
             dropRate=drop_rate,
         ).cuda()
-        net = f"WRN{depth}-{width_factor}-dropout{drop_rate}"
 
     # model = torch.nn.DataParallel(model)
     optimizer = optim.SGD(
@@ -482,11 +453,11 @@ def main_gairat(ds_name, mod_name="wideres34"):
 
     for epoch in range(start_epoch, args.epochs):
         # Get lambda
-        Lambda = adjust_Lambda(epoch + 1)
+        Lambda = adjust_Lambda(epoch + 1, args)
 
         # Adversarial training
         train_robust_loss, lr = train(
-            epoch, model, train_loader, optimizer, Lambda, lr_schedule
+            args, epoch, model, train_loader, optimizer, Lambda, lr_schedule
         )
 
         # Evalutions similar to DAT.
@@ -521,6 +492,7 @@ def main_gairat(ds_name, mod_name="wideres34"):
                     "optimizer": optimizer.state_dict(),
                 },
                 filename="bestpoint.pth.tar",
+                checkpoint="data"
             )
 
         # Save the last checkpoint
@@ -531,7 +503,8 @@ def main_gairat(ds_name, mod_name="wideres34"):
                 "test_nat_acc": test_nat_acc,
                 "test_pgd20_acc": test_pgd20_acc,
                 "optimizer": optimizer.state_dict(),
-            }
+            },
+            checkpoint="data"
         )
 
     # logger_test.close()
@@ -540,9 +513,5 @@ def main_gairat(ds_name, mod_name="wideres34"):
     model_dir = "../data/model"
     torch.save(
         model.state_dict(),
-        os.path.join(model_dir, f"model-gairat-{ds_name}-{mod_name}.pt"),
+        os.path.join(model_dir, f"model-gairat-{args.dataset}-{args.net}.pt"),
     )
-
-
-if __name__ == "__main__":
-    main_gairat("cifar10")

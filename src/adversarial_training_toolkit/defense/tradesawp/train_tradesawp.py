@@ -4,21 +4,39 @@
 import argparse
 import os
 import time
+from collections import namedtuple
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torch.autograd import Variable
+from torchvision import datasets, transforms
+
 from adversarial_training_toolkit.defense.tradesawp.trades_awp_utils_awp import (
     TradesAWP,
 )
+from adversarial_training_toolkit.defense.tradesawp.trades_awp_utils_logger import (
+    Logger,
+)
+from adversarial_training_toolkit.defense.tradesawp.trades_awp_utils_misc import (
+    AverageMeter,
+)
+from adversarial_training_toolkit.defense.tradesawp.trades_awp_utils_eval import accuracy
 
 # from utils import Bar, Logger, AverageMeter, accuracy
 # import models
 from adversarial_training_toolkit.model import WideResNet
-from torch.autograd import Variable
-from torchvision import datasets, transforms
+
+
+class TradesawpTraining:
+    def __init__(self, dataset: str, model: str, batch_size: int = 128, epochs: int = 200, weight_decay: float = 5e-4, lr: float = 0.1, momentum: float = 0.9, norm: str = "l_inf", epsilon: int = 8, num_steps: int = 10, step_size: int = 2, beta: float = 6.0, seed: int = 1, save_freq: int = 1, awp_gamma: float = 0.005, awp_warmup: int = 10) -> None:
+        ArgsPrototype = namedtuple("ArgsPrototype", ["arch", "batch_size", "test_batch_size", "epochs", "start_epoch", "data", "data_path", "weight_decay", "lr", "momentum", "no_cuda", "norm", "epsilon", "num_steps", "step_size", "beta", "seed", "model_dir", "resume_model", "resume_optim", "save_freq", "awp_gamma", "awp_warmup"])
+        self._args = ArgsPrototype(model, batch_size, batch_size, epochs, 1, dataset, "data", weight_decay, lr, momentum, False, norm, epsilon, num_steps, step_size, beta, seed, "data/model", "data/model", "data/", save_freq, awp_gamma, awp_warmup)
+
+    def __call__(self) -> None:
+        main_tradesawp(self._args)
 
 parser = argparse.ArgumentParser(
     description="PyTorch CIFAR TRADES Adversarial Training"
@@ -146,10 +164,7 @@ def setup(data):
     step_size = args.step_size / 255
     if args.awp_gamma <= 0.0:
         args.awp_warmup = np.infty
-    if args.data == "CIFAR100":
-        NUM_CLASSES = 100
-    else:
-        NUM_CLASSES = 10
+    NUM_CLASSES = 100 if args.data == "CIFAR100" else 10
     return args, epsilon, step_size, NUM_CLASSES
 
 
@@ -381,7 +396,8 @@ def adjust_learning_rate(optimizer, epoch):
     return lr
 
 
-def main(data):
+def main(args):
+    data = args.data
     args, epsilon, step_size, NUM_CLASSES = setup(data)
     # init model, ResNet18() can be also used here for training
     # model=ResNet18(num_classes=NUM_CLASSES).to(device)
@@ -469,9 +485,9 @@ def main(data):
     return model
 
 
-def main_trades_awp_10():
+def main_trades_awp_10(args):
     data = "CIFAR10"
-    model = main(data)
+    model = main(args)
 
     md = "./data/model"
     torch.save(
@@ -510,9 +526,8 @@ def main_trades_awp_10():
     )
 
 
-def main_trades_awp_100():
-    data = "CIFAR100"
-    model = main(data)
+def main_trades_awp_100(args):
+    model = main(args)
 
     md = "./data/model"
     torch.save(
@@ -552,14 +567,10 @@ def main_trades_awp_100():
     )
 
 
-def main_tradesawp(ds_name):
-    if ds_name == "cifar10":
-        main_trades_awp_10()
-    elif ds_name == "cifar100":
-        main_trades_awp_100()
+def main_tradesawp(args):
+    if args.data == "cifar10":
+        main_trades_awp_10(args)
+    elif args.data == "cifar100":
+        main_trades_awp_100(args)
     else:
         raise NotImplementedError
-
-
-if __name__ == "__main__":
-    main_trades_awp_10()

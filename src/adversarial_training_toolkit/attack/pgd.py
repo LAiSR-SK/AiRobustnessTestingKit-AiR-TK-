@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
+from adversarial_training_toolkit.attack.base import Attack, LabelMixin
 from adversarial_training_toolkit.util import (
     batch_clamp,
     batch_multiply,
@@ -13,8 +14,6 @@ from adversarial_training_toolkit.util import (
     normalize_by_pnorm,
     rand_init_delta,
 )
-
-from .base import Attack, LabelMixin
 
 
 def perturb_iterative(
@@ -56,7 +55,7 @@ def perturb_iterative(
         delta = torch.zeros_like(xvar)
 
     delta.requires_grad_()
-    for ii in range(nb_iter):
+    for _ in range(nb_iter):
         outputs = predict(xvar + delta)
         loss = loss_fn(outputs, yvar)
         if minimize:
@@ -121,7 +120,7 @@ class PGDAttack(Attack, LabelMixin):
         targeted=False,
         rand_init_type="uniform",
     ):
-        super(PGDAttack, self).__init__(predict, loss_fn, clip_min, clip_max)
+        super().__init__(predict, loss_fn, clip_min, clip_max)
         self.eps = eps
         self.nb_iter = nb_iter
         self.eps_iter = eps_iter
