@@ -66,3 +66,9 @@ if __name__ == "__main__":
 
 ## Cite Us
 See [CITATION.cff](CITATION.cff) for details on how to cite our work.
+
+## Contributors
+- Samer Khamaiseh, PhD.: Director of LAiSR Research Group
+- Steven Chiacchira: Research Assistant at LAiSR
+- Aibak Aljadayah: Research Assistant at LAiSR
+- Dierdre Jost: Research Assistant at LAiSR
