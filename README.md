@@ -4,7 +4,9 @@
 <!-- We should add badges for Huggingface, PyPI, and Conda -->
 ![License](https://img.shields.io/github/license/LAiSR-SK/ImagePatriot) ![Code Style](https://img.shields.io/badge/code_style-Ruff-orange)
 
-AI Robustness Testing Kit (AiR-TK) is an AI testing franework build upon Pytorch that enable the AI security coummunity to evalute the AI models against adversarial attacks in an easy and comphernasive perspective.  
+AI Robustness Testing Kit (AiR-TK) is an AI testing franework build upon Pytorch that enable the AI security coummunity to evalute the AI models against adversarial attacks in an easy and comphernasive perspective. Furthermore, Air-TK support adversarial training, the de-facto technique to impove the robustenss of AI models against adversarial attacks. Having the state-of-the-art adversarial attacks and the baseline adversrial training method in one-place, will help the AI security community to have a comperhesive one-stop tool for AI security evaluation.   
+
+## Motivation & Objectives
 
 Although other solutions such as the [adversarial robustness toolbox](https://github.com/Trusted-AI/adversarial-robustness-toolbox) and [MAIR](https://github.com/Harry24k/MAIR) have provided solutions for this in the past, they are not as comprehensive in breadth of provided attacks and defenses.
 .
