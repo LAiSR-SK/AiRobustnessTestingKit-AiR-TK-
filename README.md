@@ -8,8 +8,8 @@
 
 ## Motivation & Objectives
 - Provide a one-stop framework that covers the most recent adversarial attacks and adversarial training methods for easy evaluation and comparison.  
-- Promote and fasten the process of AI security research by providing pre-trained models of the base-line adversarial training methods
-- Provide a _Model-ZOO_ that contains pre-trained models for the most recent adversarial training (AT) method to promote reproducibility and fasten the comparison process with other AT methods
+- Promote and fasten the process of AI security research by providing pre-trained models of the base-line adversarial training methods.
+- Provide a _Model-ZOO_ that contains pre-trained models for the most recent adversarial training (AT) method to promote reproducibility and fasten the comparison process with other AT methods.
 
 ## Installation
 <!-- We will want a PyPI or conda package in the future; this is a very temporary solution -->
