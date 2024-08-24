@@ -4,7 +4,7 @@
 <!-- We should add badges for Huggingface, PyPI, and Conda -->
 ![License](https://img.shields.io/github/license/LAiSR-SK/ImagePatriot) ![Code Style](https://img.shields.io/badge/code_style-Ruff-orange)
 
-As machine learning approaches to artificial intelligence continue to grow in popularity, the need for secure implementation and evaluation becomes increasingly paramount. This is of especially great concern in safety-critical applications such as self object detection for driving cars, monitoring nuclear power plants, and giving medical diagnoses. To this end we present a simple yet comprehensive interface for robust training and evaluation of PyTorch classifiers.
+As machine learning approaches to artificial intelligence continue to grow in popularity, the need for secure implementation and evaluation becomes increasingly paramount. This is of especially great concern in safety-critical applications such as object detection for self driving cars, monitoring nuclear power plants, and giving medical diagnoses. To this end we present a simple yet comprehensive interface for robust training and evaluation of PyTorch classifiers.
 
 Although other solutions such as the [adversarial robustness toolbox](https://github.com/Trusted-AI/adversarial-robustness-toolbox) and [MAIR](https://github.com/Harry24k/MAIR) have provided solutions for this in the past, they are not as comprehensive in breadth of provided attacks and defenses.
 
@@ -19,7 +19,7 @@ Our work is available via this repository. In order to install from here, you wi
 ### Repository
 First our repository will need to be cloned:
 ```bash
-git clone https://github.com/LAiSR-SK/ImagePatriot.git
+git clone https://github.com/LAiSR-SK/AiRobustnessTestingKit-AiR-TK-
 ```
 
 <!-- Do we want to provide a Linux environment?-->
@@ -41,20 +41,21 @@ You can import and use our attacks as shown:
 ```python
 from torch import nn
 
-from lib.attack import FGSMAttack
-from lib.data import CIFAR100
-from lib.model import Resnet34
-
+from airtk.defense import TradesTraining
 
 if __name__ == "__main__":
-  model = Resnet34()
-  model.train()
-
-  dataset = CIFAR100(root="data/download")
-
-  attack = FGSMAttack(model.forward, nn.CrossEntropyLoss)
-
-  attack.perturb(dataset)
+    # Initialize the training function
+    training = TradesTraining(batch_size=512,
+                              "cifar10",
+                              "res101",
+                              epochs=100,
+                              lr=0.01,
+                              seed=0,
+                              model_dir="data/model/TRADES/",
+                              save_freq=10)
+                              
+    # Run the specified training regime
+    training()
 ```
 
 <!-- We should add sections for defenses, models, etc. -->
