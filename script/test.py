@@ -1,4 +1,5 @@
-from adversarial_training_toolkit.defense import GairatTraining
+from airtk.defense import GairatTraining
+
 
 if __name__ == "__main__":
-    GairatTraining("cifar100", "res18", epochs=1)()
+    GairatTraining("cifar10", "res18", epochs=2)()

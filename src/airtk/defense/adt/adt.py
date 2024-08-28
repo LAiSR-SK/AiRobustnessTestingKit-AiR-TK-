@@ -2,13 +2,18 @@
 
 # This code is licensed under the MIT license (see LICENSE.md).
 
-import argparse
 
 import copy
 import os
 import time
 
+from collections import namedtuple
+
 import torch
+from torch import optim
+
+from torch.nn import Module
+
 from airtk.helper_functions import (
     adjust_learning_rate,
     eval_clean,
@@ -16,92 +21,74 @@ from airtk.helper_functions import (
     robust_eval,
 )
 from airtk.loss import adt_loss
-from airtk.model import WideResNet
-from torch import optim
+from airtk.model import (
+    ResNet18,
+    ResNet34,
+    ResNet50,
+    ResNet101,
+    ResNet152,
+    WideResNet,
+)
 
 
-parser = argparse.ArgumentParser(
-    description="PyTorch Adversarial Training Framework: ADT"
-)
-parser.add_argument(
-    "--batch-size",
-    type=int,
-    default=128,
-    metavar="N",
-    help="input batch size for training (default: 128)",
-)
-parser.add_argument(
-    "--test-batch-size",
-    type=int,
-    default=128,
-    metavar="N",
-    help="input batch size for testing (default: 128)",
-)
-parser.add_argument(
-    "--epochs",
-    type=int,
-    default=76,
-    metavar="N",
-    help="number of epochs to train",
-)
-parser.add_argument(
-    "--weight-decay", "--wd", default=2e-4, type=float, metavar="W"
-)
-parser.add_argument(
-    "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
-)
-parser.add_argument(
-    "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
-)
-parser.add_argument(
-    "--no-cuda",
-    action="store_true",
-    default=False,
-    help="disables CUDA training",
-)
-parser.add_argument(
-    "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
-)
-parser.add_argument(
-    "--log-interval",
-    type=int,
-    default=100,
-    metavar="N",
-    help="how many batches to wait before logging training status",
-)
-parser.add_argument(
-    "--model-dir",
-    default="./data/model",
-    help="directory of model for saving checkpoint",
-)
-parser.add_argument(
-    "--save-freq",
-    "-s",
-    default=1,
-    type=int,
-    metavar="N",
-    help="save frequency",
-)
-parser.add_argument(
-    "--lr-schedule",
-    default="decay",
-    help="schedule for adjusting learning rate",
-)
-args = parser.parse_args()
+class AdtTraining:
+    def __init__(
+        self,
+        ds_name: str,
+        model_name: str,
+        batch_size: int = 128,
+        epochs: int = 76,
+        weight_decay: float = 2e-4,
+        lr: float = 0.1,
+        momentum: float = 0.9,
+        seed: int = 0,
+        model_dir: str = "data/model",
+        lr_schedule: str = "decay",
+    ) -> None:
+        ArgsPrototype = namedtuple(
+            "Prototype",
+            [
+                "batch_size",
+                "test_batch_size",
+                "epochs",
+                "weight_decay",
+                "lr",
+                "momentum",
+                "seed",
+                "model_dir",
+                "save_freq",
+                "lr_schedule",
+                "log_interval",
+            ],
+        )
 
+        self._args = ArgsPrototype(
+            batch_size,
+            batch_size,
+            epochs,
+            weight_decay,
+            lr,
+            momentum,
+            seed,
+            model_dir,
+            1,
+            seed,
+            1,
+        )
 
-# Establish the settings
-model_dir = args.model_dir
+        self._ds_name: str = ds_name
 
-if not os.path.exists(model_dir):
-    os.makedirs(model_dir)
+        self._model_name: str = model_name
 
-use_cuda = not args.no_cuda and torch.cuda.is_available()
-torch.manual_seed(args.seed)
+    def __call__(self) -> Module:
+        model_dir: str = self._args.model_dir
 
-device = torch.device("cuda" if use_cuda else "cpu")
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
 
-kwargs = {"num_workers": 1, "pin_memory": True} if use_cuda else {}
+        torch.manual_seed(self._args.seed)
+
+        main_adt(self._ds_name, self._model_name, self._args)
 
 
 def train(args, model, device, train_loader, optimizer, ds_name, epoch):
@@ -156,7 +143,7 @@ def train(args, model, device, train_loader, optimizer, ds_name, epoch):
             )
 
 
-def main_adt(ds_name, mod_name="wideres34"):
+def main_adt(ds_name, mod_name, args):
     """
 
     Main training method, which establishes the model/dataset before conducting training and
@@ -174,6 +161,8 @@ def main_adt(ds_name, mod_name="wideres34"):
 
     filename = f"log/adt-{ds_name}-{mod_name}-output.txt"
     f = open(filename, "a")
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     # Initialize the desired model
 
@@ -223,18 +212,28 @@ def main_adt(ds_name, mod_name="wideres34"):
 
     # Set up the dataloaders
 
+    kwargs = (
+        {"num_workers": 1, "pin_memory": True}
+        if torch.cuda.is_available()
+        else {}
+    )
+
     train_loader, test_loader = load_data(ds_name, args, kwargs, coarse=True)
 
     # Save the model and optimizer
 
     torch.save(
         model.state_dict(),
-        os.path.join(model_dir, f"model-adt-{ds_name}-{mod_name}-start.pt"),
+        os.path.join(
+            args.model_dir, f"model-adt-{ds_name}-{mod_name}-start.pt"
+        ),
     )
 
     torch.save(
         optimizer.state_dict(),
-        os.path.join(model_dir, f"opt-adt-{ds_name}-{mod_name}-start.tar"),
+        os.path.join(
+            args.model_dir, f"opt-adt-{ds_name}-{mod_name}-start.tar"
+        ),
     )
 
     # Begin training for the designated number of epochs
@@ -280,7 +279,7 @@ def main_adt(ds_name, mod_name="wideres34"):
             torch.save(
                 model.state_dict(),
                 os.path.join(
-                    model_dir,
+                    args.model_dir,
                     f"model-adt-{ds_name}-{mod_name}-epoch{epoch}.pt",
                 ),
             )
@@ -288,7 +287,7 @@ def main_adt(ds_name, mod_name="wideres34"):
             torch.save(
                 optimizer.state_dict(),
                 os.path.join(
-                    model_dir,
+                    args.model_dir,
                     f"opt-adt-{ds_name}-{mod_name}-epoch{epoch}.tar",
                 ),
             )
@@ -347,7 +346,3 @@ def main_adt(ds_name, mod_name="wideres34"):
     robust_eval(model_copy, device, test_loader, ds_name, f)
 
     f.close()  # close the output file
-
-
-if __name__ == "__main__":
-    main_adt("cifar10")
