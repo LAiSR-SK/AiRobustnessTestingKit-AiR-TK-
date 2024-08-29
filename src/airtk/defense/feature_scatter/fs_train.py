@@ -31,10 +31,6 @@ from torch import optim
 from tqdm import tqdm
 
 
-torch.set_printoptions(threshold=10000)
-np.set_printoptions(threshold=np.inf)
-
-
 class FeatureScatterTraining:
     def __init__(
         self,

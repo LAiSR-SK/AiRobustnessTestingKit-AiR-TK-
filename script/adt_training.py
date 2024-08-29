@@ -87,7 +87,7 @@ parser.add_argument(
     default="decay",
     help="schedule for adjusting learning rate",
 )
-args = parser.parse_args()
+# args = parser.parse_args()
 
 
 # Establish the settings

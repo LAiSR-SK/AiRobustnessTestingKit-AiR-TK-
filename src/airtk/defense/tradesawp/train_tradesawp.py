@@ -5,6 +5,8 @@ import argparse
 import os
 import time
 from collections import namedtuple
+from os import PathLike
+
 
 import numpy as np
 import torch
@@ -51,6 +53,7 @@ class TradesawpTraining:
         save_freq: int = 1,
         awp_gamma: float = 0.005,
         awp_warmup: int = 10,
+        model_dir: PathLike = "model/data"
     ) -> None:
         ArgsPrototype = namedtuple(
             "ArgsPrototype",
@@ -98,139 +101,140 @@ class TradesawpTraining:
             step_size,
             beta,
             seed,
-            "data/model",
-            "data/model",
-            "data/",
+            model_dir,
+            model_dir,
+            model_dir,
             save_freq,
             awp_gamma,
             awp_warmup,
         )
 
     def __call__(self) -> None:
+        torch.manual_seed(self._args.seed)
         main_tradesawp(self._args)
 
 
-parser = argparse.ArgumentParser(
-    description="PyTorch CIFAR TRADES Adversarial Training"
-)
-parser.add_argument("--arch", type=str, default="WideResNet34")
-parser.add_argument(
-    "--batch-size",
-    type=int,
-    default=128,
-    metavar="N",
-    help="input batch size for training (default: 128)",
-)
-parser.add_argument(
-    "--test-batch-size",
-    type=int,
-    default=128,
-    metavar="N",
-    help="input batch size for testing (default: 128)",
-)
-parser.add_argument(
-    "--epochs",
-    type=int,
-    default=200,
-    metavar="N",
-    help="number of epochs to train",
-)
-parser.add_argument(
-    "--start_epoch",
-    type=int,
-    default=1,
-    metavar="N",
-    help="retrain from which epoch",
-)
-parser.add_argument(
-    "--data", type=str, default="CIFAR10", choices=["CIFAR10", "CIFAR100"]
-)
-parser.add_argument(
-    "--data-path",
-    type=str,
-    default="../data",
-    help="where is the dataset CIFAR-10",
-)
-parser.add_argument(
-    "--weight-decay", "--wd", default=5e-4, type=float, metavar="W"
-)
-parser.add_argument(
-    "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
-)
-parser.add_argument(
-    "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
-)
-parser.add_argument(
-    "--no-cuda",
-    action="store_true",
-    default=False,
-    help="disables CUDA training",
-)
-parser.add_argument(
-    "--norm",
-    default="l_inf",
-    type=str,
-    choices=["l_inf", "l_2"],
-    help="The threat model",
-)
-parser.add_argument("--epsilon", default=8, type=float, help="perturbation")
-parser.add_argument(
-    "--num-steps", default=10, type=int, help="perturb number of steps"
-)
-parser.add_argument(
-    "--step-size", default=2, type=float, help="perturb step size"
-)
-parser.add_argument(
-    "--beta",
-    default=6.0,
-    type=float,
-    help="regularization, i.e., 1/lambda in TRADES",
-)
-parser.add_argument(
-    "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
-)
-parser.add_argument(
-    "--model-dir",
-    default="./data/model",
-    help="directory of model for saving checkpoint",
-)
-parser.add_argument(
-    "--resume-model",
-    default="",
-    type=str,
-    help="directory of model for retraining",
-)
-parser.add_argument(
-    "--resume-optim",
-    default="",
-    type=str,
-    help="directory of optimizer for retraining",
-)
-parser.add_argument(
-    "--save-freq",
-    "-s",
-    default=1,
-    type=int,
-    metavar="N",
-    help="save frequency",
-)
+# parser = argparse.ArgumentParser(
+    # description="PyTorch CIFAR TRADES Adversarial Training"
+# )
+# parser.add_argument("--arch", type=str, default="WideResNet34")
+# parser.add_argument(
+    # "--batch-size",
+    # type=int,
+    # default=128,
+    # metavar="N",
+    # help="input batch size for training (default: 128)",
+# )
+# parser.add_argument(
+    # "--test-batch-size",
+    # type=int,
+    # default=128,
+    # metavar="N",
+    # help="input batch size for testing (default: 128)",
+# )
+# parser.add_argument(
+    # "--epochs",
+    # type=int,
+    # default=200,
+    # metavar="N",
+    # help="number of epochs to train",
+# )
+# parser.add_argument(
+    # "--start_epoch",
+    # type=int,
+    # default=1,
+    # metavar="N",
+    # help="retrain from which epoch",
+# )
+# parser.add_argument(
+    # "--data", type=str, default="CIFAR10", choices=["CIFAR10", "CIFAR100"]
+# )
+# parser.add_argument(
+    # "--data-path",
+    # type=str,
+    # default="../data",
+    # help="where is the dataset CIFAR-10",
+# )
+# parser.add_argument(
+    # "--weight-decay", "--wd", default=5e-4, type=float, metavar="W"
+# )
+# parser.add_argument(
+    # "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
+# )
+# parser.add_argument(
+    # "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
+# )
+# parser.add_argument(
+    # "--no-cuda",
+    # action="store_true",
+    # default=False,
+    # help="disables CUDA training",
+# )
+# parser.add_argument(
+    # "--norm",
+    # default="l_inf",
+    # type=str,
+    # choices=["l_inf", "l_2"],
+    # help="The threat model",
+# )
+# parser.add_argument("--epsilon", default=8, type=float, help="perturbation")
+# parser.add_argument(
+    # "--num-steps", default=10, type=int, help="perturb number of steps"
+# )
+# parser.add_argument(
+    # "--step-size", default=2, type=float, help="perturb step size"
+# )
+# parser.add_argument(
+    # "--beta",
+    # default=6.0,
+    # type=float,
+    # help="regularization, i.e., 1/lambda in TRADES",
+# )
+# parser.add_argument(
+    # "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
+# )
+# parser.add_argument(
+    # "--model-dir",
+    # default="./data/model",
+    # help="directory of model for saving checkpoint",
+# )
+# parser.add_argument(
+    # "--resume-model",
+    # default="",
+    # type=str,
+    # help="directory of model for retraining",
+# )
+# parser.add_argument(
+    # "--resume-optim",
+    # default="",
+    # type=str,
+    # help="directory of optimizer for retraining",
+# )
+# parser.add_argument(
+    # "--save-freq",
+    # "-s",
+    # default=1,
+    # type=int,
+    # metavar="N",
+    # help="save frequency",
+# )
 
-parser.add_argument(
-    "--awp-gamma",
-    default=0.005,
-    type=float,
-    help="whether or not to add parametric noise",
-)
-parser.add_argument(
-    "--awp-warmup",
-    default=10,
-    type=int,
-    help="We could apply AWP after some epochs for accelerating.",
-)
-args = parser.parse_args()
+# parser.add_argument(
+    # "--awp-gamma",
+    # default=0.005,
+    # type=float,
+    # help="whether or not to add parametric noise",
+# )
+# parser.add_argument(
+    # "--awp-warmup",
+    # default=10,
+    # type=int,
+    # help="We could apply AWP after some epochs for accelerating.",
+# )
+# args = parser.parse_args()
 
 
-def setup(data):
+def setup(data, args):
     args.data = data
     epsilon = args.epsilon / 255
     step_size = args.step_size / 255
@@ -241,39 +245,38 @@ def setup(data):
 
 
 # settings
-model_dir = args.model_dir
-if not os.path.exists(model_dir):
-    os.makedirs(model_dir)
-use_cuda = not args.no_cuda and torch.cuda.is_available()
-torch.manual_seed(args.seed)
-device = torch.device("cuda" if use_cuda else "cpu")
-kwargs = {"num_workers": 2, "pin_memory": True} if use_cuda else {}
+# model_dir = args.model_dir
+# if not os.path.exists(model_dir):
+ #    os.makedirs(model_dir)
+# torch.manual_seed(args.seed)
+# device = torch.device("cuda" if use_cuda else "cpu")
+# kwargs = {"num_workers": 2, "pin_memory": True} if use_cuda else {}
 
 # setup data loader
-transform_train = transforms.Compose(
-    [
-        transforms.RandomCrop(32, padding=4),
-        transforms.RandomHorizontalFlip(),
-        transforms.ToTensor(),
-    ]
-)
-transform_test = transforms.Compose(
-    [
-        transforms.ToTensor(),
-    ]
-)
-trainset = getattr(datasets, args.data)(
-    root=args.data_path, train=True, download=True, transform=transform_train
-)
-testset = getattr(datasets, args.data)(
-    root=args.data_path, train=False, download=True, transform=transform_test
-)
-train_loader = torch.utils.data.DataLoader(
-    trainset, batch_size=args.batch_size, shuffle=True, **kwargs
-)
-test_loader = torch.utils.data.DataLoader(
-    testset, batch_size=args.test_batch_size, shuffle=False, **kwargs
-)
+# transform_train = transforms.Compose(
+    # [
+        # transforms.RandomCrop(32, padding=4),
+        # transforms.RandomHorizontalFlip(),
+        # transforms.ToTensor(),
+    # ]
+# )
+# transform_test = transforms.Compose(
+    # [
+        # transforms.ToTensor(),
+    # ]
+# )
+# trainset = getattr(datasets, args.data)(
+    # root=args.data_path, train=True, download=True, transform=transform_train
+# )
+# testset = getattr(datasets, args.data)(
+    # root=args.data_path, train=False, download=True, transform=transform_test
+# )
+# train_loader = torch.utils.data.DataLoader(
+    # trainset, batch_size=args.batch_size, shuffle=True, **kwargs
+# )
+# test_loader = torch.utils.data.DataLoader(
+    # testset, batch_size=args.test_batch_size, shuffle=False, **kwargs
+# )
 
 
 def perturb_input(
@@ -284,6 +287,7 @@ def perturb_input(
     perturb_steps=10,
     distance="l_inf",
 ):
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     model.eval()
     batch_size = len(x_natural)
     if distance == "l_inf":
@@ -356,6 +360,7 @@ def train(model, train_loader, optimizer, epoch, awp_adversary, data):
     print(f"epoch: {epoch}")
     # bar = Bar('Processing', max=len(train_loader))
 
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     for batch_idx, (data, target) in enumerate(train_loader):
         x_natural, target = data.to(device), target.to(device)
 
@@ -430,6 +435,7 @@ def test(model, test_loader, criterion):
     end = time.time()
 
     # bar = Bar('Processing', max=len(test_loader))
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(test_loader):
             inputs, targets = inputs.to(device), targets.to(device)
@@ -456,7 +462,7 @@ def test(model, test_loader, criterion):
     return losses.avg, top1.avg
 
 
-def adjust_learning_rate(optimizer, epoch):
+def adjust_learning_rate(optimizer, epoch, args):
     """decrease the learning rate"""
     lr = args.lr
     if epoch >= 100:
@@ -469,10 +475,38 @@ def adjust_learning_rate(optimizer, epoch):
 
 
 def main(args):
+    kwargs = {"num_workers": 2, "pin_memory": True} if torch.cuda.is_available() else {}
+
+    # setup data loader
+    transform_train = transforms.Compose(
+        [
+            transforms.RandomCrop(32, padding=4),
+            transforms.RandomHorizontalFlip(),
+            transforms.ToTensor(),
+        ]
+    )
+    transform_test = transforms.Compose(
+        [
+            transforms.ToTensor(),
+        ]
+    )
+    trainset = getattr(datasets, args.data)(
+        root=args.data_path, train=True, download=True, transform=transform_train
+    )
+    testset = getattr(datasets, args.data)(
+        root=args.data_path, train=False, download=True, transform=transform_test
+    )
+    train_loader = torch.utils.data.DataLoader(
+        trainset, batch_size=args.batch_size, shuffle=True, **kwargs
+    )
+    test_loader = torch.utils.data.DataLoader(
+        testset, batch_size=args.test_batch_size, shuffle=False, **kwargs
+    )
     data = args.data
     args, epsilon, step_size, NUM_CLASSES = setup(data)
     # init model, ResNet18() can be also used here for training
-    # model=ResNet18(num_classes=NUM_CLASSES).to(device)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # model= ResNet18(num_classes=NUM_CLASSES).to(device)
     model = WideResNet(
         depth=34, num_classes=100 if data == "cifar100" else 10
     ).to(device)
@@ -497,7 +531,7 @@ def main(args):
 
     criterion = nn.CrossEntropyLoss()
 
-    logger = Logger(os.path.join(model_dir, "log.txt"), title=args.arch)
+    logger = Logger(os.path.join(args.model_dir, "log.txt"), title=args.arch)
     logger.set_names(
         [
             "Learning Rate",
@@ -521,7 +555,7 @@ def main(args):
 
     for epoch in range(args.start_epoch, args.epochs + 1):
         # adjust learning rate for SGD
-        lr = adjust_learning_rate(optimizer, epoch)
+        lr = adjust_learning_rate(optimizer, epoch, args)
 
         # adversarial training
         adv_loss, adv_acc = train(
@@ -546,19 +580,18 @@ def main(args):
         if epoch % args.save_freq == 0:
             torch.save(
                 model.state_dict(),
-                os.path.join(model_dir, f"ours-model-epoch{epoch}.pt"),
+                os.path.join(args.model_dir, f"ours-model-epoch{epoch}.pt"),
             )
             torch.save(
                 optimizer.state_dict(),
                 os.path.join(
-                    model_dir, f"ours-opt-checkpoint_epoch{epoch}.tar"
+                    args.model_dir, f"ours-opt-checkpoint_epoch{epoch}.tar"
                 ),
             )
     return model
 
 
 def main_trades_awp_10(args):
-    data = "CIFAR10"
     model = main(args)
 
     md = "./data/model"
@@ -570,6 +603,7 @@ def main_trades_awp_10(args):
     )
 
     # target_model = ResNet18(num_classes=10)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     target_model = WideResNet(depth=34, num_classes=10).to(device)
     from collections import OrderedDict
 
@@ -592,7 +626,7 @@ def main_trades_awp_10(args):
     torch.save(
         target_model.module.state_dict(),
         os.path.join(
-            model_dir,
+            args.model_dir,
             "model-trades-awp-{}-{}.pt".format("cifar10", "wideres34"),
         ),
     )
@@ -610,6 +644,7 @@ def main_trades_awp_100(args):
     )
 
     # target_model = ResNet18(num_classes=100)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     target_model = WideResNet(depth=34, num_classes=100).to(device)
 
     from collections import OrderedDict
@@ -633,7 +668,7 @@ def main_trades_awp_100(args):
     torch.save(
         target_model.module.state_dict(),
         os.path.join(
-            model_dir,
+            args.model_dir,
             "model-trades-awp-{}-{}.pt".format("cifar100", "wideres34"),
         ),
     )

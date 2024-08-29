@@ -27,8 +27,7 @@ from airtk.defense.yopo.utils_misc import (
 # from network import create_network
 from airtk.defense.yopo.wide_resnet import WideResNet
 
-torch.backends.cudnn.benchmark = True
-
+# torch.backends.cudnn.benchmark = True
 
 # writer = SummaryWriter(log_dir=config.log_dir)
 class YopoTraining:
@@ -46,6 +45,7 @@ class YopoTraining:
         momentum: float = 0.9,
         gamma: float = 0.1,
         eps: float = 8.0 / 255.0,
+        model_dir: PathLike = "data/model"
     ) -> None:
         self._config = TrainingConfig(
             eps,
@@ -64,9 +64,9 @@ class YopoTraining:
 
         ArgPrototype = namedtuple(
             "ArgPrototype",
-            ["batch_size", "resume", "auto_continue", "adv_coef"],
+            ["batch_size", "resume", "auto_continue", "adv_coef", "model_dir"],
         )
-        self._args = ArgPrototype(batch_size, False, False, 1.0)
+        self._args = ArgPrototype(batch_size, False, False, 1.0, model_dir)
 
     def __call__(self) -> None:
         main_yopo(self._ds_name, self._config, self._args)
@@ -78,7 +78,7 @@ def main_yopo(ds_name, config, args):
     elif ds_name == "cifar100":
         num_classes = 100
     else:
-        raise NotImplementedError
+        raise NotImplementedError()
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
     net = WideResNet(depth=34, num_classes=num_classes).to(DEVICE)
     net.to(DEVICE)
@@ -88,7 +88,7 @@ def main_yopo(ds_name, config, args):
     optimizer = config.create_optimizer()(net.parameters())
     lr_scheduler = config.create_lr_scheduler()(optimizer)
 
-    ## Make Layer One trainner  This part of code should be writen in config.py
+    ## Make Layer One trainer  This part of code should be written in config.py
 
     Hamiltonian_func = Hamiltonian(net.layer_one, config.weight_decay)
     layer_one_optimizer = optim.SGD(
@@ -117,7 +117,7 @@ def main_yopo(ds_name, config, args):
     now_epoch = 0
 
     if args.auto_continue:
-        args.resume = os.path.join(config.model_dir, "last.checkpoint")
+        args.resume = os.path.join(args.model_dir, "last.checkpoint")
     if args.resume is not None and os.path.isfile(args.resume):
         now_epoch = load_checkpoint(args.resume, net, optimizer, lr_scheduler)
 
@@ -154,7 +154,7 @@ def main_yopo(ds_name, config, args):
             optimizer,
             lr_scheduler,
             file_name=os.path.join(
-                config.model_dir, f"epoch-{now_epoch}.checkpoint"
+                args.model_dir, f"epoch-{now_epoch}.checkpoint"
             ),
         )
 

@@ -922,7 +922,7 @@ def main_currat(ds_name, args):
 
         gid = 0
 
-        for batch_idx, (inputs, targets) in enumerate(trainloader):
+        for _, (_, targets) in enumerate(trainloader):
             for t in Variable(targets).data:
                 t = int(t)
 

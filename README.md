@@ -8,7 +8,18 @@ As machine learning approaches to artificial intelligence continue to grow in po
 
 Although other solutions such as the [adversarial robustness toolbox](https://github.com/Trusted-AI/adversarial-robustness-toolbox) and [MAIR](https://github.com/Harry24k/MAIR) have provided solutions for this in the past, they are not as comprehensive in breadth of provided attacks and defenses.
 
-<!-- Provide a table comparing the frameworks here? -->
+### Included Defenses
+- Adversarial Distributional Training (ADT)
+- Adversarial Distributional Training++ (ADTPP)
+- Adversarial Weight Distribution ([ATAWP](https://arxiv.org/abs/2004.05884))
+- Currat
+- Federated Adversarial Training ([FAT](https://arxiv.org/pdf/2012.01791))
+- Feature Scatter ([FS](https://arxiv.org/abs/1907.10764))
+- Geometry Aware Instance Reweighted Adversarial Training ([GAIRAT](https://github.com/zjfheart/Geometry-aware-Instance-reweighted-Adversarial-Training))
+- TRadeoff-inspired Adversarial DEfenses via Surrogate loss minimization ([TRADES](https://github.com/yaodongyu/TRADES))
+- TRADES with Adversarial Weight Distribution (TRADESAWP)
+- Various Attacks (VA)
+- You Only Propogate Once ([YOPO](https://arxiv.org/abs/1905.00877))
 
 ## Installation
 <!-- We will want a PyPI or conda package in the future; this is a very temporary solution -->
@@ -16,7 +27,7 @@ Our work is available via this repository. In order to install from here, you wi
 - The [Conda](https://www.anaconda.com/) environment manager.
 - The [Git](https://www.git-scm.com/) version control system.
 
-### Repository
+### Cloning the Repository
 First our repository will need to be cloned:
 ```bash
 git clone https://github.com/LAiSR-SK/AiRobustnessTestingKit-AiR-TK-
@@ -32,12 +43,11 @@ conda activate ./.conda
 
 ### Pretrained Models
 <!-- We need to add our huggingface models -->
-In order to expedite progress in the field of secure AI, we have provided the weights of our trained models on [huggingface](). More information on our achieved benchmarks is available [below](#benchmarks).
+In order to expedite progress in the field of secure AI, we have provided the weights of our trained models on [huggingface]().
 
 ## Examples
-<!-- we should finalize the interface before we keep these. The current one needs to be redone -->
-### Attacks
-You can import and use our attacks as shown:
+### Defenses
+You can import and use our defenses as shown:
 ```python
 from torch import nn
 
@@ -57,12 +67,6 @@ if __name__ == "__main__":
     # Run the specified training regime
     training()
 ```
-
-<!-- We should add sections for defenses, models, etc. -->
-
-## Benchmarks
-<!-- What tables do we use? Original tables?-->
-
 
 ## Cite Us
 See [CITATION.cff](CITATION.cff) for details on how to cite our work.
