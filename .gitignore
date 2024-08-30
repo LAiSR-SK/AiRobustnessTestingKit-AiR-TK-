@@ -1,5 +1,6 @@
 .conda
 .ruff_cache
+.vscode
 __pycache__
 
 # data files
@@ -10,4 +11,5 @@ data/model/*.pt
 data/model/*.tar
 
 # log files
-log/*.txt
+log/*
+!log/.gitkeep
