@@ -13,3 +13,6 @@ data/model/*.tar
 # log files
 log/*
 !log/.gitkeep
+
+# distrubution
+dist/*
