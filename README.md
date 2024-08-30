@@ -4,9 +4,16 @@
 <!-- We should add badges for Huggingface, PyPI, and Conda -->
 ![License](https://img.shields.io/github/license/LAiSR-SK/ImagePatriot) ![Code Style](https://img.shields.io/badge/code_style-Ruff-orange)
 
-As machine learning approaches to artificial intelligence continue to grow in popularity, the need for secure implementation and evaluation becomes increasingly paramount. This is of especially great concern in safety-critical applications such as object detection for self driving cars, monitoring nuclear power plants, and giving medical diagnoses. To this end we present a simple yet comprehensive interface for robust training and evaluation of PyTorch classifiers.
+As machine learning approaches to artificial intelligence continue to grow in popularity, the need for secure implementation and evaluation becomes increasingly paramount. This is of especially great concern in safety-critical applications such as object detection for self driving cars, monitoring nuclear power plants, and giving medical diagnoses.
+
+**AI Robustness Testing Kit (AiR-TK)** is an AI testing framework built upon PyTorch that enables the AI security community to evaluate the AI models against adversarial attacks easily and comprehensively. Furthermore, Air-TK supports adversarial training, the de-facto technique to improve the robustness of AI models against adversarial attacks. Having easy access to state-of-the-art adversarial attacks and the baseline adversarial training method in one place will help the AI security community to replicate, re-use, and improve the upcoming attacks and defense methods.   
 
 Although other solutions such as the [adversarial robustness toolbox](https://github.com/Trusted-AI/adversarial-robustness-toolbox) and [MAIR](https://github.com/Harry24k/MAIR) have provided solutions for this in the past, they are not as comprehensive in breadth of provided attacks and defenses.
+
+## Motivation & Objectives
+- Provide a one-stop framework that covers the most recent adversarial attacks and adversarial training methods for easy evaluation and comparison.  
+- Promote and quicken the process of AI security research by providing pre-trained models of the base-line adversarial training methods.
+- Provide a _Model-ZOO_ that contains pre-trained models for the most recent adversarial training (AT) method to promote reproducibility and fasten the comparison process with other AT methods.
 
 ### Included Defenses
 - Adversarial Distributional Training (ADT)
@@ -70,3 +77,9 @@ if __name__ == "__main__":
 
 ## Cite Us
 See [CITATION.cff](CITATION.cff) for details on how to cite our work.
+
+## Contributors
+- Samer Khamaiseh, PhD.: Director of LAiSR Research Group
+- Steven Chiacchira: Research Assistant at LAiSR
+- Aibak Aljadayah: Research Assistant at LAiSR
+- Dierdre Jost: Research Assistant at LAiSR
