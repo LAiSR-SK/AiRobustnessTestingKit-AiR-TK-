@@ -8,12 +8,18 @@ authors = [
 ]
 description = "Comprehensive and simple framework for conducting AI robustness experiments"
 readme = "README.md"
-requires-python = "3.9"
+requires-python = "==3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: Microsoft :: Windows :: Windows 10",
     "Environment :: GPU :: NVIDIA CUDA :: 11.8"
+]
+dependencies = [
+    "pytorch>=2.1.1",
+    "networkx>=3.1",
+    "pyyaml>=6.0.0",
+    "huggingface-hub>=0.24.0"
 ]
 
 [project.urls]
