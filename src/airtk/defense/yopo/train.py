@@ -6,6 +6,7 @@ import torch
 
 # from tensorboardX import SummaryWriter
 import torch.optim as optim
+
 from airtk.defense.yopo.config import TrainingConfig
 from airtk.defense.yopo.dataset import (
     create_test_dataset,
@@ -29,6 +30,7 @@ from airtk.defense.yopo.wide_resnet import WideResNet
 
 # torch.backends.cudnn.benchmark = True
 
+
 # writer = SummaryWriter(log_dir=config.log_dir)
 class YopoTraining:
     def __init__(
@@ -45,7 +47,7 @@ class YopoTraining:
         momentum: float = 0.9,
         gamma: float = 0.1,
         eps: float = 8.0 / 255.0,
-        model_dir: PathLike = "data/model"
+        model_dir: PathLike = "data/model",
     ) -> None:
         self._config = TrainingConfig(
             eps,

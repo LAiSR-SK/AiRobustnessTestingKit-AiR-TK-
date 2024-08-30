@@ -1,8 +1,9 @@
 from collections import OrderedDict
 
 import torch
-from airtk.defense.yopo.utils_misc import torch_accuracy
 from tqdm import tqdm
+
+from airtk.defense.yopo.utils_misc import torch_accuracy
 
 
 class FastGradientLayerOneTrainer:

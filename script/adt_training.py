@@ -3,7 +3,6 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 
 import argparse
-
 import copy
 import os
 import time
@@ -18,7 +17,6 @@ from airtk.helper_functions import (
 from airtk.loss import adt_loss
 from airtk.model import WideResNet
 from torch import optim
-
 
 parser = argparse.ArgumentParser(
     description="PyTorch Adversarial Training Framework: ADT"

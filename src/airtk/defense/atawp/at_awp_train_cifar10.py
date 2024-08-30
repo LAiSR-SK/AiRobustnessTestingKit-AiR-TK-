@@ -1,19 +1,13 @@
 import argparse
 import logging
-
 import math
 import os
 import time
 
-
 import numpy as np
-
 import torch
-
 import torch.nn as nn
-
 import torch.nn.functional as F
-
 from airtk.defense.atawp.at_awp_utils import (
     Crop,
     Cutout,
@@ -25,15 +19,11 @@ from airtk.defense.atawp.at_awp_utils import (
     pad,
     transpose,
 )
-
 from airtk.defense.atawp.at_awp_utils_awp import (
     AdvWeightPerturb,
 )
-
 from airtk.model import ResNet18, WideResNet
-
 from torch.autograd import Variable
-
 
 mu = torch.tensor(cifar10_mean).view(3, 1, 1).cuda()
 

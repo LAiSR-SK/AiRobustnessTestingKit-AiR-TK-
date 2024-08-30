@@ -9,9 +9,7 @@ from airtk.model.resnet import (
     ResNet101,
     ResNet152,
 )
-
 from airtk.model.wideresnet import WideResNet
-
 
 __all__ = [
     "ResNet18",

@@ -1,10 +1,6 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
-import time
 import math
+import time
 
 import torch
 import torch.nn.functional as F
@@ -105,7 +101,7 @@ class Square(Attack):
 
     def init_hyperparam(self, x):
         assert self.norm in ["Linf", "L2"]
-        assert not self.eps is None
+        assert self.eps is not None
         assert self.loss in ["ce", "margin"]
 
         if self.device is None:
@@ -191,7 +187,7 @@ class Square(Attack):
             p = self.p_init / 128
         elif 6000 < it <= 8000:
             p = self.p_init / 256
-        elif 8000 < it:
+        elif it > 8000:
             p = self.p_init / 512
         else:
             p = self.p_init
@@ -276,19 +272,11 @@ class Square(Attack):
                     ind_succ = (margin_min <= 0.0).nonzero().squeeze()
                     if self.verbose and ind_succ.numel() != 0:
                         print(
-                            "{}".format(i_iter + 1),
-                            "- success rate={}/{} ({:.2%})".format(
-                                ind_succ.numel(),
-                                n_ex_total,
-                                float(ind_succ.numel()) / n_ex_total,
-                            ),
-                            "- avg # queries={:.1f}".format(
-                                n_queries[ind_succ].mean().item()
-                            ),
-                            "- med # queries={:.1f}".format(
-                                n_queries[ind_succ].median().item()
-                            ),
-                            "- loss={:.3f}".format(loss_min.mean()),
+                            f"{i_iter + 1}",
+                            f"- success rate={ind_succ.numel()}/{n_ex_total} ({float(ind_succ.numel()) / n_ex_total:.2%})",
+                            f"- avg # queries={n_queries[ind_succ].mean().item():.1f}",
+                            f"- med # queries={n_queries[ind_succ].median().item():.1f}",
+                            f"- loss={loss_min.mean():.3f}",
                         )
 
                     if ind_succ.numel() == n_ex_total:
@@ -426,19 +414,11 @@ class Square(Attack):
                     ind_succ = (margin_min <= 0.0).nonzero().squeeze()
                     if self.verbose and ind_succ.numel() != 0:
                         print(
-                            "{}".format(i_iter + 1),
-                            "- success rate={}/{} ({:.2%})".format(
-                                ind_succ.numel(),
-                                n_ex_total,
-                                float(ind_succ.numel()) / n_ex_total,
-                            ),
-                            "- avg # queries={:.1f}".format(
-                                n_queries[ind_succ].mean().item()
-                            ),
-                            "- med # queries={:.1f}".format(
-                                n_queries[ind_succ].median().item()
-                            ),
-                            "- loss={:.3f}".format(loss_min.mean()),
+                            f"{i_iter + 1}",
+                            f"- success rate={ind_succ.numel()}/{n_ex_total} ({float(ind_succ.numel()) / n_ex_total:.2%})",
+                            f"- avg # queries={n_queries[ind_succ].mean().item():.1f}",
+                            f"- med # queries={n_queries[ind_succ].median().item():.1f}",
+                            f"- loss={loss_min.mean():.3f}",
                         )
 
                     assert (x_new != x_new).sum() == 0
@@ -507,10 +487,8 @@ class Square(Attack):
                 adv[ind_to_fool[ind_curr]] = adv_curr[ind_curr].clone()
                 if self.verbose:
                     print(
-                        "restart {} - robust accuracy: {:.2%}".format(
-                            counter, acc.float().mean()
-                        ),
-                        "- cum. time: {:.1f} s".format(time.time() - startt),
+                        f"restart {counter} - robust accuracy: {acc.float().mean():.2%}",
+                        f"- cum. time: {time.time() - startt:.1f} s",
                     )
 
         return adv

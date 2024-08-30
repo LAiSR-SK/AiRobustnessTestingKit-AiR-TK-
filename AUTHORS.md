@@ -6,4 +6,4 @@ This project was developed at Miami University of Ohio under the guidance of Dr.
 
 ## Project Developers
 - Deirdre Jost
-- Revisions by Steven Chiacchira
+- Revisions by Steven Chiacchira and Aibak Aljadayah

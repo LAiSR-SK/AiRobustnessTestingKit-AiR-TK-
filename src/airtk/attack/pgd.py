@@ -3,9 +3,7 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 
 import numpy as np
-
 import torch
-
 import torch.nn as nn
 
 from airtk.attack.base import Attack, LabelMixin

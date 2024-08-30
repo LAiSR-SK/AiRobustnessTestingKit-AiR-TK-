@@ -4,5 +4,4 @@
 
 from airtk.defense.adtpp.adtpp import AdtppTraining
 
-
 __all__ = ["AdtppTraining"]

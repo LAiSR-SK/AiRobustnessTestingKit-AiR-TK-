@@ -5,6 +5,7 @@ import math
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from huggingface_hub import PyTorchModelHubMixin
 
 
 class BasicBlock(nn.Module):
@@ -85,7 +86,7 @@ class NetworkBlock(nn.Module):
         return self.layer(x)
 
 
-class WideResNet(nn.Module):
+class WideResNet(nn.Module, PyTorchModelHubMixin):
     def __init__(
         self, depth=34, num_classes=10, widen_factor=10, dropRate=0.0
     ):

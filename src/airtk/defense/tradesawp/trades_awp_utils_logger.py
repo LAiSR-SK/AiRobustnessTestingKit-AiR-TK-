@@ -3,7 +3,6 @@
 # Copied from https://github.com/bearpaw/pytorch-classification/blob/master/utils/logger.py
 
 
-import numpy as np
 
 __all__ = ["Logger", "LoggerMonitor", "savefig"]
 

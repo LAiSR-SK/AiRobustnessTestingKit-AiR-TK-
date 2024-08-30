@@ -1,8 +1,9 @@
+import copy
+
 import torch
 import torch.nn.functional as F
 
 from ..attack import Attack
-import copy
 
 
 class Noise:

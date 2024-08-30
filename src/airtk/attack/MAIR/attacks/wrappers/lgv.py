@@ -1,9 +1,10 @@
-import os
 import copy
 import itertools
+import os
+from random import sample, shuffle
+
 import torch
 import torch.nn as nn
-from random import shuffle, sample
 
 from ..attack import Attack
 from ..attacks.bim import BIM

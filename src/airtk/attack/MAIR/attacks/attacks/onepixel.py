@@ -1,5 +1,4 @@
 import numpy as np
-
 import torch
 import torch.nn.functional as F
 
@@ -112,9 +111,7 @@ class OnePixel(Attack):
         adv_image = self._perturb(image, delta)  # Single delta
         prob = self._get_prob(adv_image)
         pre = np.argmax(prob)
-        if self.targeted and (pre == label):
-            return True
-        elif (not self.targeted) and (pre != label):
+        if self.targeted and (pre == label) or (not self.targeted) and (pre != label):
             return True
         return False
 

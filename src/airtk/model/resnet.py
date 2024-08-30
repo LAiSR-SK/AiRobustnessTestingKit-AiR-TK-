@@ -3,6 +3,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+from huggingface_hub import PyTorchModelHubMixin
 
 class BasicBlock(nn.Module):
     expansion = 1
@@ -82,7 +83,7 @@ class Bottleneck(nn.Module):
         return out
 
 
-class ResNet(nn.Module):
+class ResNet(nn.Module, PyTorchModelHubMixin):
     def __init__(self, block, num_blocks, num_classes=10):
         super(ResNet, self).__init__()
         self.in_planes = 64

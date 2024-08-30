@@ -2,8 +2,8 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 import numpy as np
 import torch
-from torch.nn.functional import log_softmax, softmax
 import torch.nn as nn
+from torch.nn.functional import log_softmax, softmax
 
 
 class FAT_EARLYSTOP:

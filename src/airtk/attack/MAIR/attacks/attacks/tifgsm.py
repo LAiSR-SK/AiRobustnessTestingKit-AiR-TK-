@@ -1,8 +1,7 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-import numpy as np
 from scipy import stats as st
 
 from ..attack import Attack

@@ -5,24 +5,16 @@
 import copy
 import os
 import time
-
 from collections import namedtuple
-
 from typing import Any, Dict, NamedTuple
-
 
 import numpy as np
 import torch
 from torch import optim
-
 from torch.nn import Module
-
 from torch.optim import Optimizer
-
 from torch.optim.lr_scheduler import CosineAnnealingLR
-
 from torch.optim.swa_utils import SWALR, AveragedModel
-
 from torch.utils.data import DataLoader
 
 from airtk.helper_functions import (

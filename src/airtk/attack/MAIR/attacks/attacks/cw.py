@@ -60,7 +60,7 @@ class CW(Attack):
         w.requires_grad = True
 
         best_adv_images = images.clone().detach()
-        best_L2 = 1e10 * torch.ones((len(images))).to(self.device)
+        best_L2 = 1e10 * torch.ones(len(images)).to(self.device)
         prev_cost = 1e10
         dim = len(images.shape)
 

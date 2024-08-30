@@ -2,21 +2,16 @@
 
 # This code is licensed under the MIT license (see LICENSE.md).
 import os
-
 from collections import namedtuple
-
 
 import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-
 import torchvision
-
 from torchvision import transforms
 
 import airtk.defense.gairat.gairat_attack_generator as attack
-
 from airtk.model import ResNet18, WideResNet
 
 
@@ -39,7 +34,7 @@ class GairatTraining:
         lr_drop_epoch: int = 100,
         Lambda: int = -1,
         begin_epoch: int = 60,
-        model_dir: str = "./data/model"
+        model_dir: str = "./data/model",
     ) -> None:
         ArgPrototype = namedtuple(
             "ArgPrototype",
@@ -68,7 +63,7 @@ class GairatTraining:
                 "Lambda_schedule",
                 "Weight_assignment_function",
                 "begin_epoch",
-                "model_dir"
+                "model_dir",
             ],
         )
 
@@ -97,7 +92,7 @@ class GairatTraining:
             "fixed",
             "tanh",
             begin_epoch,
-            model_dir
+            model_dir,
         )
 
     def __call__(
@@ -134,9 +129,7 @@ class GairatTraining:
 # Save checkpoint
 
 
-def save_checkpoint(
-    state, filename="checkpoint.pth.tar"
-):
+def save_checkpoint(state, filename="checkpoint.pth.tar"):
     filepath = os.path.join(filename)
 
     torch.save(state, filepath)
@@ -622,7 +615,7 @@ def main_gairat(args):
                     "test_pgd20_acc": test_pgd20_acc,
                     "optimizer": optimizer.state_dict(),
                 },
-                filename= args.model_dir + "/bestpoint.pth.tar",
+                filename=args.model_dir + "/bestpoint.pth.tar",
             )
 
         # Save the last checkpoint
@@ -635,7 +628,7 @@ def main_gairat(args):
                 "test_pgd20_acc": test_pgd20_acc,
                 "optimizer": optimizer.state_dict(),
             },
-            filename=args.model_dir + f"/epoch-{epoch}.pth.tar"
+            filename=args.model_dir + f"/epoch-{epoch}.pth.tar",
         )
 
     # logger_test.close()

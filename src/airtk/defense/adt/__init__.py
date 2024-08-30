@@ -4,5 +4,4 @@
 
 from airtk.defense.adt.adt import AdtTraining
 
-
 __all__ = ["AdtTraining"]

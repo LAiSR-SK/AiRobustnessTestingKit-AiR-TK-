@@ -1,12 +1,10 @@
 # (c) 2024 LAiSR-SK
 # This code is licensed under the MIT license (see LICENSE.md).
 
-import argparse
 import os
 import time
 from collections import namedtuple
 from os import PathLike
-
 
 import numpy as np
 import torch
@@ -19,14 +17,14 @@ from torchvision import datasets, transforms
 from airtk.defense.tradesawp.trades_awp_utils_awp import (
     TradesAWP,
 )
+from airtk.defense.tradesawp.trades_awp_utils_eval import (
+    accuracy,
+)
 from airtk.defense.tradesawp.trades_awp_utils_logger import (
     Logger,
 )
 from airtk.defense.tradesawp.trades_awp_utils_misc import (
     AverageMeter,
-)
-from airtk.defense.tradesawp.trades_awp_utils_eval import (
-    accuracy,
 )
 
 # from utils import Bar, Logger, AverageMeter, accuracy
@@ -53,7 +51,7 @@ class TradesawpTraining:
         save_freq: int = 1,
         awp_gamma: float = 0.005,
         awp_warmup: int = 10,
-        model_dir: PathLike = "model/data"
+        model_dir: PathLike = "model/data",
     ) -> None:
         ArgsPrototype = namedtuple(
             "ArgsPrototype",
@@ -115,121 +113,121 @@ class TradesawpTraining:
 
 
 # parser = argparse.ArgumentParser(
-    # description="PyTorch CIFAR TRADES Adversarial Training"
+# description="PyTorch CIFAR TRADES Adversarial Training"
 # )
 # parser.add_argument("--arch", type=str, default="WideResNet34")
 # parser.add_argument(
-    # "--batch-size",
-    # type=int,
-    # default=128,
-    # metavar="N",
-    # help="input batch size for training (default: 128)",
+# "--batch-size",
+# type=int,
+# default=128,
+# metavar="N",
+# help="input batch size for training (default: 128)",
 # )
 # parser.add_argument(
-    # "--test-batch-size",
-    # type=int,
-    # default=128,
-    # metavar="N",
-    # help="input batch size for testing (default: 128)",
+# "--test-batch-size",
+# type=int,
+# default=128,
+# metavar="N",
+# help="input batch size for testing (default: 128)",
 # )
 # parser.add_argument(
-    # "--epochs",
-    # type=int,
-    # default=200,
-    # metavar="N",
-    # help="number of epochs to train",
+# "--epochs",
+# type=int,
+# default=200,
+# metavar="N",
+# help="number of epochs to train",
 # )
 # parser.add_argument(
-    # "--start_epoch",
-    # type=int,
-    # default=1,
-    # metavar="N",
-    # help="retrain from which epoch",
+# "--start_epoch",
+# type=int,
+# default=1,
+# metavar="N",
+# help="retrain from which epoch",
 # )
 # parser.add_argument(
-    # "--data", type=str, default="CIFAR10", choices=["CIFAR10", "CIFAR100"]
+# "--data", type=str, default="CIFAR10", choices=["CIFAR10", "CIFAR100"]
 # )
 # parser.add_argument(
-    # "--data-path",
-    # type=str,
-    # default="../data",
-    # help="where is the dataset CIFAR-10",
+# "--data-path",
+# type=str,
+# default="../data",
+# help="where is the dataset CIFAR-10",
 # )
 # parser.add_argument(
-    # "--weight-decay", "--wd", default=5e-4, type=float, metavar="W"
+# "--weight-decay", "--wd", default=5e-4, type=float, metavar="W"
 # )
 # parser.add_argument(
-    # "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
+# "--lr", type=float, default=0.1, metavar="LR", help="learning rate"
 # )
 # parser.add_argument(
-    # "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
+# "--momentum", type=float, default=0.9, metavar="M", help="SGD momentum"
 # )
 # parser.add_argument(
-    # "--no-cuda",
-    # action="store_true",
-    # default=False,
-    # help="disables CUDA training",
+# "--no-cuda",
+# action="store_true",
+# default=False,
+# help="disables CUDA training",
 # )
 # parser.add_argument(
-    # "--norm",
-    # default="l_inf",
-    # type=str,
-    # choices=["l_inf", "l_2"],
-    # help="The threat model",
+# "--norm",
+# default="l_inf",
+# type=str,
+# choices=["l_inf", "l_2"],
+# help="The threat model",
 # )
 # parser.add_argument("--epsilon", default=8, type=float, help="perturbation")
 # parser.add_argument(
-    # "--num-steps", default=10, type=int, help="perturb number of steps"
+# "--num-steps", default=10, type=int, help="perturb number of steps"
 # )
 # parser.add_argument(
-    # "--step-size", default=2, type=float, help="perturb step size"
+# "--step-size", default=2, type=float, help="perturb step size"
 # )
 # parser.add_argument(
-    # "--beta",
-    # default=6.0,
-    # type=float,
-    # help="regularization, i.e., 1/lambda in TRADES",
+# "--beta",
+# default=6.0,
+# type=float,
+# help="regularization, i.e., 1/lambda in TRADES",
 # )
 # parser.add_argument(
-    # "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
+# "--seed", type=int, default=1, metavar="S", help="random seed (default: 1)"
 # )
 # parser.add_argument(
-    # "--model-dir",
-    # default="./data/model",
-    # help="directory of model for saving checkpoint",
+# "--model-dir",
+# default="./data/model",
+# help="directory of model for saving checkpoint",
 # )
 # parser.add_argument(
-    # "--resume-model",
-    # default="",
-    # type=str,
-    # help="directory of model for retraining",
+# "--resume-model",
+# default="",
+# type=str,
+# help="directory of model for retraining",
 # )
 # parser.add_argument(
-    # "--resume-optim",
-    # default="",
-    # type=str,
-    # help="directory of optimizer for retraining",
+# "--resume-optim",
+# default="",
+# type=str,
+# help="directory of optimizer for retraining",
 # )
 # parser.add_argument(
-    # "--save-freq",
-    # "-s",
-    # default=1,
-    # type=int,
-    # metavar="N",
-    # help="save frequency",
+# "--save-freq",
+# "-s",
+# default=1,
+# type=int,
+# metavar="N",
+# help="save frequency",
 # )
 
 # parser.add_argument(
-    # "--awp-gamma",
-    # default=0.005,
-    # type=float,
-    # help="whether or not to add parametric noise",
+# "--awp-gamma",
+# default=0.005,
+# type=float,
+# help="whether or not to add parametric noise",
 # )
 # parser.add_argument(
-    # "--awp-warmup",
-    # default=10,
-    # type=int,
-    # help="We could apply AWP after some epochs for accelerating.",
+# "--awp-warmup",
+# default=10,
+# type=int,
+# help="We could apply AWP after some epochs for accelerating.",
 # )
 # args = parser.parse_args()
 
@@ -247,35 +245,35 @@ def setup(data, args):
 # settings
 # model_dir = args.model_dir
 # if not os.path.exists(model_dir):
- #    os.makedirs(model_dir)
+#    os.makedirs(model_dir)
 # torch.manual_seed(args.seed)
 # device = torch.device("cuda" if use_cuda else "cpu")
 # kwargs = {"num_workers": 2, "pin_memory": True} if use_cuda else {}
 
 # setup data loader
 # transform_train = transforms.Compose(
-    # [
-        # transforms.RandomCrop(32, padding=4),
-        # transforms.RandomHorizontalFlip(),
-        # transforms.ToTensor(),
-    # ]
+# [
+# transforms.RandomCrop(32, padding=4),
+# transforms.RandomHorizontalFlip(),
+# transforms.ToTensor(),
+# ]
 # )
 # transform_test = transforms.Compose(
-    # [
-        # transforms.ToTensor(),
-    # ]
+# [
+# transforms.ToTensor(),
+# ]
 # )
 # trainset = getattr(datasets, args.data)(
-    # root=args.data_path, train=True, download=True, transform=transform_train
+# root=args.data_path, train=True, download=True, transform=transform_train
 # )
 # testset = getattr(datasets, args.data)(
-    # root=args.data_path, train=False, download=True, transform=transform_test
+# root=args.data_path, train=False, download=True, transform=transform_test
 # )
 # train_loader = torch.utils.data.DataLoader(
-    # trainset, batch_size=args.batch_size, shuffle=True, **kwargs
+# trainset, batch_size=args.batch_size, shuffle=True, **kwargs
 # )
 # test_loader = torch.utils.data.DataLoader(
-    # testset, batch_size=args.test_batch_size, shuffle=False, **kwargs
+# testset, batch_size=args.test_batch_size, shuffle=False, **kwargs
 # )
 
 
@@ -475,7 +473,11 @@ def adjust_learning_rate(optimizer, epoch, args):
 
 
 def main(args):
-    kwargs = {"num_workers": 2, "pin_memory": True} if torch.cuda.is_available() else {}
+    kwargs = (
+        {"num_workers": 2, "pin_memory": True}
+        if torch.cuda.is_available()
+        else {}
+    )
 
     # setup data loader
     transform_train = transforms.Compose(
@@ -491,10 +493,16 @@ def main(args):
         ]
     )
     trainset = getattr(datasets, args.data)(
-        root=args.data_path, train=True, download=True, transform=transform_train
+        root=args.data_path,
+        train=True,
+        download=True,
+        transform=transform_train,
     )
     testset = getattr(datasets, args.data)(
-        root=args.data_path, train=False, download=True, transform=transform_test
+        root=args.data_path,
+        train=False,
+        download=True,
+        transform=transform_test,
     )
     train_loader = torch.utils.data.DataLoader(
         trainset, batch_size=args.batch_size, shuffle=True, **kwargs

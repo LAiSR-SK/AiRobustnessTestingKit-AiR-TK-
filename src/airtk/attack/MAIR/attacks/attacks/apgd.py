@@ -1,7 +1,6 @@
 import time
 
 import numpy as np
-
 import torch
 import torch.nn as nn
 
@@ -286,9 +285,7 @@ class APGD(Attack):
             )  # nopep8
             if self.verbose:
                 print(
-                    "iteration: {} - Best loss: {:.6f}".format(
-                        i, loss_best.sum()
-                    )
+                    f"iteration: {i} - Best loss: {loss_best.sum():.6f}"
                 )
 
             # check step size
@@ -345,11 +342,9 @@ class APGD(Attack):
         # loss = -1e10 * torch.ones_like(acc).float()
         if self.verbose:
             print(
-                "-------------------------- running {}-attack with epsilon {:.4f} --------------------------".format(
-                    self.norm, self.eps
-                )
+                f"-------------------------- running {self.norm}-attack with epsilon {self.eps:.4f} --------------------------"
             )
-            print("initial accuracy: {:.2%}".format(acc.float().mean()))
+            print(f"initial accuracy: {acc.float().mean():.2%}")
         startt = time.time()
 
         if not best_loss:
@@ -383,11 +378,7 @@ class APGD(Attack):
                         adv[ind_to_fool[ind_curr]] = adv_curr[ind_curr].clone()
                         if self.verbose:
                             print(
-                                "restart {} - robust accuracy: {:.2%} - cum. time: {:.1f} s".format(
-                                    counter,
-                                    acc.float().mean(),
-                                    time.time() - startt,
-                                )
+                                f"restart {counter} - robust accuracy: {acc.float().mean():.2%} - cum. time: {time.time() - startt:.1f} s"
                             )
 
             return acc, adv
@@ -405,9 +396,7 @@ class APGD(Attack):
 
                 if self.verbose:
                     print(
-                        "restart {} - loss: {:.5f}".format(
-                            counter, loss_best.sum()
-                        )
+                        f"restart {counter} - loss: {loss_best.sum():.5f}"
                     )
 
             return loss_best, adv_best

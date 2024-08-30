@@ -48,7 +48,7 @@ class Pixle(Attack):
 
         if restarts < 0 or not isinstance(restarts, int):
             raise ValueError(
-                "restarts must be and integer >= 0 " "({})".format(restarts)
+                "restarts must be and integer >= 0 " f"({restarts})"
             )
 
         self.update_each_iteration = update_each_iteration
@@ -67,7 +67,7 @@ class Pixle(Attack):
             raise ValueError(
                 "pixel_mapping must be one of [random, similarity,"
                 "similarity_random, distance, distance_random]"
-                " ({})".format(self.pixel_mapping)
+                f" ({self.pixel_mapping})"
             )
 
         if isinstance(y_dimensions, (int, float)):
@@ -86,7 +86,7 @@ class Pixle(Attack):
             raise ValueError(
                 "dimensions of first patch must contains integers"
                 " or floats in [0, 1]"
-                " ({})".format(y_dimensions)
+                f" ({y_dimensions})"
             )
 
         self.p1_x_dimensions = x_dimensions

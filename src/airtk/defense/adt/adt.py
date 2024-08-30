@@ -6,12 +6,10 @@
 import copy
 import os
 import time
-
 from collections import namedtuple
 
 import torch
 from torch import optim
-
 from torch.nn import Module
 
 from airtk.helper_functions import (

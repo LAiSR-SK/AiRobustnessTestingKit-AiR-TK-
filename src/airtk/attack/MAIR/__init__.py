@@ -4,5 +4,4 @@
 
 from airtk.attack.MAIR.eotpgd import EOTPGD
 
-
 __all__ = ["EOTPGD"]

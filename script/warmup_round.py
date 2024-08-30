@@ -17,7 +17,6 @@ from airtk.loss import standard_loss
 from airtk.util import get_model
 from torch import optim
 
-
 parser = argparse.ArgumentParser(description="PyTorch VA Adversarial Training")
 
 parser.add_argument("--dataset", type=str, default="cifar100", help="dataset")

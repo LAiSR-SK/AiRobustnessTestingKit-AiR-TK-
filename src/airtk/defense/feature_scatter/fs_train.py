@@ -4,31 +4,21 @@
 
 """Train Adversarially Robust Models with Feature Scattering"""
 
-import argparse
 import os
 from collections import namedtuple
-
 from os import PathLike
 
-
-import numpy as np
 import torch
-
 import torch.backends.cudnn as cudnn
-
 import torchvision
-
 import torchvision.transforms as transforms
+from torch import optim
+from tqdm import tqdm
+
 from airtk.defense.feature_scatter.fs_attack_methods import (
     Attack_FeaScatter,
 )
-from airtk.defense.feature_scatter.fs_utils import (
-    str2bool,
-)
 from airtk.model import WideResNet
-from torch import optim
-
-from tqdm import tqdm
 
 
 class FeatureScatterTraining:

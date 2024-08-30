@@ -4,38 +4,25 @@
 
 """params must provide: --data, --net, --method, --expect_acc/--validk, --maxk(for cat)"""
 
-import argparse
 
-import json
 import os
-import timeit
 from collections import namedtuple
-
 from os import PathLike
-
 from typing import Optional, OrderedDict
 
-
 import numpy as np
-
 import torch
-
 import torch.backends.cudnn as cudnn
-
 import torchvision
-
 import torchvision.transforms as transforms
+from torch import nn, optim
+from torch.autograd import Variable
+from torch.utils.data.sampler import SubsetRandomSampler
+
 from airtk.defense.currat.currat_pgd import (
     LinfPGDAttack,
 )
 from airtk.model import ResNet50, WideResNet
-
-from torch import nn, optim
-
-from torch.autograd import Variable
-
-from torch.utils.data.sampler import SubsetRandomSampler
-
 
 # with open("training/currat/currat_config.json") as config_file:
 

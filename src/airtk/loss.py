@@ -3,12 +3,9 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 
 import torch
-
 import torch.nn.functional as F
-
 from autoattack import AutoAttack
 from torch import nn, optim
-
 from torch.autograd import Variable
 
 from airtk.attack import create_attack

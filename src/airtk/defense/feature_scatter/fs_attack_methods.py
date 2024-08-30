@@ -4,8 +4,11 @@
 
 import pickle
 
-
 import torch
+from torch import nn
+
+# from torch.autograd.gradcheck import zero_gradients
+from torch.autograd import Variable
 
 from airtk.defense.feature_scatter import fs_ot
 from airtk.defense.feature_scatter.fs_utils import (
@@ -13,10 +16,6 @@ from airtk.defense.feature_scatter.fs_utils import (
     one_hot_tensor,
     softCrossEntropy,
 )
-from torch import nn
-
-# from torch.autograd.gradcheck import zero_gradients
-from torch.autograd import Variable
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 

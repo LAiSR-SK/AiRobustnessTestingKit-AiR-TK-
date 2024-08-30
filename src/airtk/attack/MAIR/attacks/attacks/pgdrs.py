@@ -1,6 +1,7 @@
+import copy
+
 import torch
 import torch.nn.functional as F
-import copy
 
 from ..attack import Attack
 

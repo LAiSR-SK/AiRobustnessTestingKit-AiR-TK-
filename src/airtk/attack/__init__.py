@@ -19,7 +19,6 @@ from airtk.attack.pgd import (
 )
 from airtk.attack.util import create_attack
 
-
 __all__ = [
     "Attack",
     "create_attack",

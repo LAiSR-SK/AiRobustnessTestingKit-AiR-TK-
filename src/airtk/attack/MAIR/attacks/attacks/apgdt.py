@@ -1,7 +1,6 @@
 import time
 
 import numpy as np
-
 import torch
 
 from ..attack import Attack
@@ -285,9 +284,7 @@ class APGDT(Attack):
             )
             if self.verbose:
                 print(
-                    "iteration: {} - Best loss: {:.6f}".format(
-                        i, loss_best.sum()
-                    )
+                    f"iteration: {i} - Best loss: {loss_best.sum():.6f}"
                 )
 
             # check step size
@@ -344,11 +341,9 @@ class APGDT(Attack):
         # loss = -1e10 * torch.ones_like(acc).float()
         if self.verbose:
             print(
-                "-------------------------- running {}-attack with epsilon {:.4f} --------------------------".format(
-                    self.norm, self.eps
-                )
+                f"-------------------------- running {self.norm}-attack with epsilon {self.eps:.4f} --------------------------"
             )
-            print("initial accuracy: {:.2%}".format(acc.float().mean()))
+            print(f"initial accuracy: {acc.float().mean():.2%}")
         startt = time.time()
 
         torch.random.manual_seed(self.seed)
@@ -383,13 +378,7 @@ class APGDT(Attack):
                         adv[ind_to_fool[ind_curr]] = adv_curr[ind_curr].clone()
                         if self.verbose:
                             print(
-                                "restart {} - target_class {} - robust accuracy: {:.2%} at eps = {:.5f} - cum. time: {:.1f} s".format(
-                                    counter,
-                                    self.target_class,
-                                    acc.float().mean(),
-                                    self.eps,
-                                    time.time() - startt,
-                                )
+                                f"restart {counter} - target_class {self.target_class} - robust accuracy: {acc.float().mean():.2%} at eps = {self.eps:.5f} - cum. time: {time.time() - startt:.1f} s"
                             )
 
         return acc, adv

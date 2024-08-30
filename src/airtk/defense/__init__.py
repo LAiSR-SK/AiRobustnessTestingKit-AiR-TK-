@@ -20,7 +20,6 @@ from airtk.defense.tradesawp import TradesawpTraining
 from airtk.defense.va import VaTraining
 from airtk.defense.yopo import YopoTraining
 
-
 __all__ = [
     "AdtTraining",
     "AdtppTraining",

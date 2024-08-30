@@ -10,11 +10,12 @@ if father_dir not in sys.path:
 from collections import OrderedDict
 
 import torch
+from tqdm import tqdm
+
 from airtk.defense.yopo.utils_misc import (
     AvgMeter,
     torch_accuracy,
 )
-from tqdm import tqdm
 
 
 def train_one_epoch(

@@ -4,5 +4,4 @@
 
 from airtk.defense.gairat.gairat import GairatTraining
 
-
 __all__ = ["GairatTraining"]

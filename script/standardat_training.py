@@ -3,7 +3,6 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 
 import argparse
-
 import copy
 import os
 import time
@@ -25,7 +24,6 @@ from airtk.model import (
     WideResNet,
 )
 from torch import optim
-
 
 parser = argparse.ArgumentParser(
     description="PyTorch CIFAR Adversarial Training Framework"

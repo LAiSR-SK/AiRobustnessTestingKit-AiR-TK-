@@ -9,14 +9,12 @@ differential_evolution: The differential evolution global optimization algorithm
 Added by Andrew Nelson 2014
 """
 
-from __future__ import division, print_function, absolute_import
 import numpy as np
-from scipy.optimize import OptimizeResult, minimize
 
 # from scipy.optimize.optimize import _status_message % for version < 1.8
 # from scipy.optimize.optimize_ import _status_message % for version >= 1.8
 from scipy._lib._util import check_random_state
-
+from scipy.optimize import OptimizeResult, minimize
 
 __all__ = ["differential_evolution"]
 _status_message = {
@@ -243,7 +241,7 @@ def differential_evolution(
     return solver.solve()
 
 
-class DifferentialEvolutionSolver(object):
+class DifferentialEvolutionSolver:
     """This class implements the differential evolution solver
     Parameters
     ----------

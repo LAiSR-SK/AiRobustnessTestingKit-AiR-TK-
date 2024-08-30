@@ -1,18 +1,14 @@
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
 
-import time
 import math
-
-import torch
-import torch.nn.functional as F
+import time
 
 # zero_gradients deprecated in torch >= 1.9.
 # zero_gradients is re-defined in the bottom of the code.
 # from torch.autograd.gradcheck import zero_gradients
 from collections import abc as container_abcs
+
+import torch
+import torch.nn.functional as F
 
 from ..attack import Attack
 
@@ -161,7 +157,7 @@ class FAB(Attack):
         pred = y_pred == y
         corr_classified = pred.float().sum()
         if self.verbose:
-            print("Clean accuracy: {:.2%}".format(pred.float().mean()))
+            print(f"Clean accuracy: {pred.float().mean():.2%}")
         if pred.sum() == 0:
             return x
         pred = self.check_shape(pred.nonzero().squeeze())
@@ -388,12 +384,8 @@ class FAB(Attack):
         ind_succ = res2 < 1e10
         if self.verbose:
             print(
-                "success rate: {:.0f}/{:.0f}".format(
-                    ind_succ.float().sum(), corr_classified
-                )
-                + " (on correctly classified points) in {:.1f} s".format(
-                    time.time() - startt
-                )
+                f"success rate: {ind_succ.float().sum():.0f}/{corr_classified:.0f}"
+                + f" (on correctly classified points) in {time.time() - startt:.1f} s"
             )
 
         res_c[pred] = res2 * ind_succ.float() + 1e10 * (1 - ind_succ.float())
@@ -424,7 +416,7 @@ class FAB(Attack):
         pred = y_pred == y
         corr_classified = pred.float().sum()
         if self.verbose:
-            print("Clean accuracy: {:.2%}".format(pred.float().mean()))
+            print(f"Clean accuracy: {pred.float().mean():.2%}")
         if pred.sum() == 0:
             return x
         pred = self.check_shape(pred.nonzero().squeeze())
@@ -661,12 +653,8 @@ class FAB(Attack):
         ind_succ = res2 < 1e10
         if self.verbose:
             print(
-                "success rate: {:.0f}/{:.0f}".format(
-                    ind_succ.float().sum(), corr_classified
-                )
-                + " (on correctly classified points) in {:.1f} s".format(
-                    time.time() - startt
-                )
+                f"success rate: {ind_succ.float().sum():.0f}/{corr_classified:.0f}"
+                + f" (on correctly classified points) in {time.time() - startt:.1f} s"
             )
 
         res_c[pred] = res2 * ind_succ.float() + 1e10 * (1 - ind_succ.float())
@@ -735,22 +723,11 @@ class FAB(Attack):
                         if self.verbose:
                             if targeted:
                                 print(
-                                    "restart {} - target_class {} - robust accuracy: {:.2%} at eps = {:.5f} - cum. time: {:.1f} s".format(
-                                        counter,
-                                        self.target_class,
-                                        acc.float().mean(),
-                                        self.eps,
-                                        time.time() - startt,
-                                    )
+                                    f"restart {counter} - target_class {self.target_class} - robust accuracy: {acc.float().mean():.2%} at eps = {self.eps:.5f} - cum. time: {time.time() - startt:.1f} s"
                                 )
                             else:
                                 print(
-                                    "restart {} - robust accuracy: {:.2%} at eps = {:.5f} - cum. time: {:.1f} s".format(
-                                        counter,
-                                        acc.float().mean(),
-                                        self.eps,
-                                        time.time() - startt,
-                                    )
+                                    f"restart {counter} - robust accuracy: {acc.float().mean():.2%} at eps = {self.eps:.5f} - cum. time: {time.time() - startt:.1f} s"
                                 )
 
             if self.multi_targeted:

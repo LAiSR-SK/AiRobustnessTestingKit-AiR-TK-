@@ -4,7 +4,6 @@
 
 import numpy as np
 import torch
-
 from torch.distributions import laplace, uniform
 
 from airtk.model import (

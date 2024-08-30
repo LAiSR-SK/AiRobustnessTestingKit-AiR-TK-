@@ -1,27 +1,27 @@
 # Import necessary libraries
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
-import torch.nn.functional as F
 import matplotlib.pyplot as plt
-
+import torch.nn as nn
+import torch.nn.functional as F
 from attacks.attacks.apgd import APGD
 from attacks.attacks.apgdt import APGDT
 from attacks.attacks.autoattack import AutoAttack
 from attacks.attacks.bim import BIM
+from attacks.attacks.cw import CW
+from attacks.attacks.deepfool import DeepFool
 from attacks.attacks.difgsm import DIFGSM
 from attacks.attacks.eaden import EADEN
 from attacks.attacks.eadl1 import EADL1
 from attacks.attacks.eotpgd import EOTPGD
 from attacks.attacks.fab import FAB
 from attacks.attacks.ffgsm import FFGSM
+from attacks.attacks.fgsm import FGSM
 from attacks.attacks.gn import GN
 from attacks.attacks.jitter import Jitter
 from attacks.attacks.jsma import JSMA
 from attacks.attacks.mifgsm import MIFGSM
 from attacks.attacks.nifgsm import NIFGSM
+from attacks.attacks.onepixel import OnePixel
+from attacks.attacks.pgd import PGD
 from attacks.attacks.pgdl2 import PGDL2
 from attacks.attacks.pgdrs import PGDRS
 from attacks.attacks.pgdrsl2 import PGDRSL2
@@ -39,11 +39,8 @@ from attacks.attacks.upgd import UPGD
 from attacks.attacks.vanila import VANILA
 from attacks.attacks.vmifgsm import VMIFGSM
 from attacks.attacks.vnifgsm import VNIFGSM
-from attacks.attacks.cw import CW
-from attacks.attacks.deepfool import DeepFool
-from attacks.attacks.fgsm import FGSM
-from attacks.attacks.onepixel import OnePixel
-from attacks.attacks.pgd import PGD
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
 
 
 # Define a simple CNN model

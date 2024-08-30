@@ -15,7 +15,7 @@ def wrapper_method(func):
     return wrapper_func
 
 
-class Attack(object):
+class Attack:
     r"""
     Base class for all attacks.
 
@@ -544,7 +544,7 @@ class Attack(object):
         return (
             self.attack
             + "("
-            + ", ".join("{}={}".format(key, val) for key, val in info.items())
+            + ", ".join(f"{key}={val}" for key, val in info.items())
             + ")"
         )
 

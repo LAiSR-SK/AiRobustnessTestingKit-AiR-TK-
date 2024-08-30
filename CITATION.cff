@@ -3,19 +3,19 @@ message: "If you use our work, please cite it as below:"
 authors:
   - family-names: Khamaiseh
     given-names: Samer
-    orcid: # TODO
+    orcid: https://orcid.org/0000-0001-9339-1685
   - family-names: Jost
     given-names: Deirdre
-    orcid: # TODO
+    orcid: https://orcid.org/0009-0002-7670-1164
   - family-names: Chiacchira
     given-names: Steven
-    orcid: # TODO
+    orcid: https://orcid.org/0009-0001-8559-7162
   - family-names: Aljadayah
     given-names: Aibak
     orcid: # TODO
 
-title: "Adversarial Training Toolkit"
-version: 1.0.0
+title: "airtk"
+version: 0.1
 identifiers:
   - type: # TODO
 date-released: # TODO

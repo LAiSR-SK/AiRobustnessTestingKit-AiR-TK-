@@ -3,10 +3,8 @@
 # This code is licensed under the MIT license (see LICENSE.md).
 import argparse
 import os
-
 import sys
 import time
-
 
 import numpy as np
 import torch
@@ -16,7 +14,6 @@ from torch import nn
 from torch.optim import lr_scheduler
 from torch.utils.data import DataLoader, Dataset
 from torchvision import datasets, transforms
-
 
 parser = argparse.ArgumentParser()
 parser.add_argument(

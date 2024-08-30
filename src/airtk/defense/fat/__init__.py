@@ -4,5 +4,4 @@
 
 from airtk.defense.fat.fat_training import FatTraining
 
-
 __all__ = ["FatTraining"]

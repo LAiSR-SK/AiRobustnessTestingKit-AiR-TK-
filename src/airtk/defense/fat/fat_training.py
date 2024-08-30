@@ -5,13 +5,9 @@ import datetime
 import os
 from collections import namedtuple
 
-
 import torch
-
 import torchvision
-
 from torch import nn, optim
-
 from torchvision import transforms
 
 import airtk.defense.fat.fat_attack_generator as attack

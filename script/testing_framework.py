@@ -2,9 +2,7 @@
 
 # This code is licensed under the MIT license (see LICENSE.md).
 import argparse
-
 import copy
-
 
 import torch
 from airtk.attack import create_attack
@@ -22,15 +20,10 @@ from airtk.model import (
     ResNet152,
     WideResNet,
 )
-
 from autoattack import AutoAttack
-
 from torch import nn
-
 from torch.autograd import Variable
-
 from torch.optim.swa_utils import AveragedModel
-
 
 kwargs = (
     {"num_workers": 1, "pin_memory": True} if torch.cuda.is_available() else {}

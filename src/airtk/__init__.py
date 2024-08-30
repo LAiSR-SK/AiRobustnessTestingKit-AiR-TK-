@@ -10,5 +10,4 @@ from airtk import (
     util,
 )
 
-
 __all__ = ["attack", "defense", "model", "data", "loss", "util"]
