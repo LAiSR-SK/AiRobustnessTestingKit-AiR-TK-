@@ -1,10 +1,10 @@
 [project]
 name = "airtk"
-version = "0.1"
+version = "0.1.2"
 authors = [
-    { name = "Deirdre Jost", email = "jostdb@miamioh.edu" },
-    { name = "Steven Chiacchira", email = "chiaccsa@miamioh.edu" },
-    { name = "Aibak Aljadayah" }
+    { name="Deirdre Jost", email="jostdb@miamioh.edu" },
+    { name="Steven Chiacchira", email="chiaccsa@miamioh.edu" },
+    { name="Aibak Aljadayah", email="aljadaaa@miamioh.edu" },
 ]
 description = "Comprehensive and simple framework for conducting AI robustness experiments"
 readme = "README.md"
