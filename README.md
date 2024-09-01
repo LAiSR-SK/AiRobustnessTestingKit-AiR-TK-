@@ -42,6 +42,7 @@ conda activate ./.conda
 # Contents
 ## Attacks
 ```python
+# The tool will let your life easier by combination different attacks, depending on your needs
 attacks = [
     VNIFGSM,
     VMIFGSM,
