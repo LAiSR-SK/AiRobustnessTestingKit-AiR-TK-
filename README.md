@@ -60,39 +60,39 @@ for attack in attacks:
 ```
 
 We support the following attacks:
-    - VNIFGSM: Variance-Tuning Iterative Fast Gradient Sign Method
-    - VMIFGSM: Variance-Tuning Momentum Iterative Fast Gradient Sign Method
-    - UPGD: Ultimate Projected Gradient Descent
-    - TPGD: Textual Projected Gradient Descent
-    - Square: Square Attack
-    - SPSA: Simultaneous Perturbation Stochastic Approximation
-    - SparseFool: SparseFool Attack
-    - SINIFGSM: Scale-Invariant Nesterov Iterative Fast Gradient Sign Method
-    - RFGSM: Randomized Fast Gradient Sign Method
-    - Pixle: Not an attack (likely a typo for “Pixel”)
-    - PGDRSL2: Projected Gradient Descent with Random Start L2
-    - PGDRS: Projected Gradient Descent with Random Start
-    - PGDL2: Projected Gradient Descent L2
-    - NIFGSM: Nesterov Iterative Fast Gradient Sign Method
-    - MIFGSM: Momentum Iterative Fast Gradient Sign Method
-    - JSMA: Jacobian-based Saliency Map Attack
-    - Jitter: Not an attack (could be referring to a type of noise)
-    - GN: Gaussian Noise (not an attack)
-    - FFGSM: Fast Feature Gradient Sign Method
-    - FAB: Fast Adaptive Boundary Attack
-    - EOTPGD: Expectation Over Transformation Projected Gradient Descent
-    - EADL1: Elastic-net Attack with L1
-    - EADEN: Elastic-net Attack with Elastic-net
-    - DIFGSM: Diverse Input Fast Gradient Sign Method
-    - BIM: Basic Iterative Method
-    - AutoAttack: AutoAttack
-    - APGDT: Adversarial Projected Gradient Descent Targeted
-    - APGD: Adversarial Projected Gradient Descent
-    - FGSM: Fast Gradient Sign Method
-    - PGD: Projected Gradient Descent
-    - CW: Carlini & Wagner Attack
-    - DeepFool: DeepFool Attack
-    - OnePixel: One Pixel Attack
+- VNIFGSM: Variance-Tuning Iterative Fast Gradient Sign Method
+- VMIFGSM: Variance-Tuning Momentum Iterative Fast Gradient Sign Method
+- UPGD: Ultimate Projected Gradient Descent
+- TPGD: Textual Projected Gradient Descent
+- Square: Square Attack
+- SPSA: Simultaneous Perturbation Stochastic Approximation
+- SparseFool: SparseFool Attack
+- SINIFGSM: Scale-Invariant Nesterov Iterative Fast Gradient Sign Method
+- RFGSM: Randomized Fast Gradient Sign Method
+- Pixle: Not an attack (likely a typo for “Pixel”)
+- PGDRSL2: Projected Gradient Descent with Random Start L2
+- PGDRS: Projected Gradient Descent with Random Start
+- PGDL2: Projected Gradient Descent L2
+- NIFGSM: Nesterov Iterative Fast Gradient Sign Method
+- MIFGSM: Momentum Iterative Fast Gradient Sign Method
+- JSMA: Jacobian-based Saliency Map Attack
+- Jitter: Not an attack (could be referring to a type of noise)
+- GN: Gaussian Noise (not an attack)
+- FFGSM: Fast Feature Gradient Sign Method
+- FAB: Fast Adaptive Boundary Attack
+- EOTPGD: Expectation Over Transformation Projected Gradient Descent
+- EADL1: Elastic-net Attack with L1
+- EADEN: Elastic-net Attack with Elastic-net
+- DIFGSM: Diverse Input Fast Gradient Sign Method
+- BIM: Basic Iterative Method
+- AutoAttack: AutoAttack
+- APGDT: Adversarial Projected Gradient Descent Targeted
+- APGD: Adversarial Projected Gradient Descent
+- FGSM: Fast Gradient Sign Method
+- PGD: Projected Gradient Descent
+- CW: Carlini & Wagner Attack
+- DeepFool: DeepFool Attack
+- OnePixel: One Pixel Attack
 
 ## Defenses
 You can import and use our defenses as shown:
