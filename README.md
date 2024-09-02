@@ -16,13 +16,14 @@ As machine learning approaches to artificial intelligence continue to grow in po
 **AI Robustness Testing Kit (AiR-TK)** is an AI testing framework built upon PyTorch that enables the AI security community to evaluate the AI models against adversarial attacks easily and comprehensively. Furthermore, Air-TK supports adversarial training, the de-facto technique to improve the robustness of AI models against adversarial attacks. Having easy access to state-of-the-art adversarial attacks and the baseline adversarial training method in one place will help the AI security community to replicate, re-use, and improve the upcoming attacks and defense methods.   
 
 Although other solutions such as the [adversarial robustness toolbox](https://github.com/Trusted-AI/adversarial-robustness-toolbox) and [MAIR](https://github.com/Harry24k/MAIR) have provided solutions for this in the past, they are not as comprehensive in breadth of provided attacks and defenses.
-# Why This Tool Could Contribute to Your AI Models
-Our tool embodies our vision for the AI world: a need for frameworks that are not only easy to use but also centralized for effortless maintenance. Designed for engineers focused on building and optimizing models, this tool maximizes your focus on usability and functionality while ensuring adherence to security needs.
+
+## Usecases
+Our tool fulfills one of the current gaps in the AI world: a need for simple evaluation of existing frameworks in order to determine the effectiveness of new attacks.
 
 ## Key Benefits:
-- Ease of Use: Our tool simplifies the process of integrating security needs(attacks and defense) into your AI models. 
+- Ease of Use: Our tool simplifies the process of evaluating exisitng models and evaluation methods.
 - Centralized Maintenance: By centralizing various functionalities, our tool reduces the complexity of managing multiple libraries and tools. This streamlined approach allows for more efficient updates and maintenance.
-- Enhanced Usability: We prioritize user experience, ensuring that our tool is not only powerful but also user-friendly. This focus on usability means you can spend more time on model development and less time on troubleshooting.
+- Enhanced Usability: We prioritize user experience, ensuring that our tool is user-friendly. This focus on usability means you can spend more time on model development and less time on troubleshooting.
 
 # Installation
 Our work is available via this repository and as a [PyPI package](https://pypi.org/project/airtk/).
