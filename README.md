@@ -1,7 +1,8 @@
 <!-- Logo needs to be touched up; add our name-->
 <span align="center">
 
-![Logo](asset/repo/image/logo.png)
+![AiR-TK Logo](https://github.com/user-attachments/assets/2763a510-a333-494a-982d-9db4f0dd1399)
+
 
 [![Python Package](https://img.shields.io/pypi/pyversions/airtk?style=flat&logo=python&logoColor=green)](https://pypi.org/project/airtk/)
 [![Huggingface](https://img.shields.io/badge/%F0%9F%A4%97%20HuggingFace-gray)](https://pypi.org/project/airtk/)
