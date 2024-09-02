@@ -20,7 +20,7 @@ Although other solutions such as the [adversarial robustness toolbox](https://gi
 Our tool embodies our vision for the AI world: a need for frameworks that are not only easy to use but also centralized for effortless maintenance. Designed for engineers focused on building and optimizing models, this tool maximizes your focus on usability and functionality while ensuring adherence to security needs.
 
 ## Key Benefits:
-- Ease of Use: Our tool simplifies the process of integrating security needs(attacks and defense_ into your AI models. 
+- Ease of Use: Our tool simplifies the process of integrating security needs(attacks and defense) into your AI models. 
 - Centralized Maintenance: By centralizing various functionalities, our tool reduces the complexity of managing multiple libraries and tools. This streamlined approach allows for more efficient updates and maintenance.
 - Enhanced Usability: We prioritize user experience, ensuring that our tool is not only powerful but also user-friendly. This focus on usability means you can spend more time on model development and less time on troubleshooting.
 
