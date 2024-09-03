@@ -187,8 +187,8 @@ In the near future, AiR-TK will include most-recent text-based, LLM, and diffuio
 - This tool is publicly opend to the AI security community to improve the AI robustness and make the AI more secure and safe to use. It is a must to be used in ethical way that is aligned with U.S. Law and internationl law. This tool is not built to be used in an unethical manner.
 
 ## Acknowledgment
-We would like to thanks the following contributors
-- Samer Khamaiseh, Ph.D.| Director of LAiSR Research Group
+We would like to thanks the following contributors:
+- Samer Khamaiseh, Ph.D. | Director of LAiSR Research Group
 - Steven Chiacchira | Research Assistant @ LAiSR Research Group
 - Aibak Al-jadayh | Research Assistant @ LAiSR Research Group
 - Deirdre Jost | Research Assistant @ LAiSR Research Group
