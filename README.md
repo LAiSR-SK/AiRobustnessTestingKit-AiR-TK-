@@ -18,7 +18,7 @@ As machine learning approaches to artificial intelligence continue to grow in po
 Although other solutions such as the [adversarial robustness toolbox](https://github.com/Trusted-AI/adversarial-robustness-toolbox) and [MAIR](https://github.com/Harry24k/MAIR) have provided solutions for this in the past, they are not as comprehensive in breadth of provided attacks and defenses.
 
 ## Usecases
-Our tool fulfills one of the current gaps in the AI world: a need for simple evaluation of existing frameworks in order to determine the effectiveness of new attacks.
+Our tool fulfills one of the current gaps in the AI security world: a need for simple evaluation of existing frameworks in order to determine the robustness of AI models against adversarial attacks.
 
 ## Key Benefits:
 - Ease of Use: Our tool simplifies the process of evaluating exisitng models and evaluation methods.
@@ -125,7 +125,7 @@ if __name__ == "__main__":
 
 We support the following defenses:
 - Adversarial Distributional Training (ADT)
-- Adversarial Distributional Training++ (ADTPP)
+- Adversarial Adversarial Distributional Training (ADT++)
 - Adversarial Weight Distribution ([ATAWP](https://arxiv.org/abs/2004.05884))
 - Curriculum Adversarial Training (Currat)
 - Federated Adversarial Training ([FAT](https://arxiv.org/pdf/2012.01791))
@@ -179,5 +179,10 @@ if __name__ == "__main__":
     print(f"Accuracy: {acc}")
 ```
 
+## Future Direction
+In the near future, AiR-TK will include most-recent text-based, LLM, and diffuiosn models attacks and defenses
+
+## Disclaimer
+Air-TK is build upon using source code from the original authors and other AI framework such as MAIR and IBM-ART. Upon using this tool, it is recommend to cite the this tool and the coresponding attack and defense method
 ## Cite Us
 See [CITATION.cff](CITATION.cff) or the sidebar for details on how to cite our work.
