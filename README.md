@@ -183,7 +183,7 @@ if __name__ == "__main__":
 In the near future, AiR-TK will include most-recent text-based, LLM, and diffuiosn models attacks and defenses
 
 ## Disclaimer -- A message from the Director of LAiSR Research Group
-- Air-TK is build upon using source code from the original authors and other AI framework such as MAIR and IBM-ART. Upon using this tool, it is recommend to cite this tool and the coresponding attack and defense method
+- Air-TK is built upon using source code from the original authors and other AI framework such as MAIR and IBM-ART. Upon using this tool, it is recommend to cite this tool and the coresponding attack and defense method
 - This tool is publicly opend to the AI security community to improve the AI robustness and make the AI more secure and safe to use. It is a must to be used in ethical way that is aligned with U.S. Law and internationl law. This tool is not built to be used in an unethical manner.
 
 ## Acknowledgment
